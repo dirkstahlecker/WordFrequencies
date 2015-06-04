@@ -48,6 +48,10 @@ def addLine(line):
                 namesDict[word] = 1
             wordsDict[word] = 1
 
+def lookupWord():
+    inp = raw_input('Enter word for lookup: ')
+    print inp + ': ' + str(wordsDict[inp])
+
 def printAll(names):
     printHighest(float('inf'), names)
 
@@ -100,13 +104,13 @@ if __name__ == '__main__':
     #parser.parse_args()
     #main('/users/dirk/desktop/journal_test.txt')
     main('/Volumes/Disk Image/journal.rtf')
-    printAll(True)
+    #printAll(True)
+    lookupWord();
 
-    #print 'guessedNamesSet: ',
-    #print guessedNamesSet
 
 
 '''
 TODO: 
+add per day
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
 '''
