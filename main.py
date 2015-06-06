@@ -3,10 +3,13 @@ import re
 import operator
 
 namesSet = set()
-wordsDict = {}
-namesDict = {}
+wordsDict = {} #{ word : ( count , last occurence ) }
+namesDict = {} #{ name : ( count , last occurence ) }
+wordsPerDayDict = {} #{ word : ( count , last occurence ) } only counts one occurence per day
+namesPerDayDict = {} #{ word : ( count , last occurence ) }
 guessedNamesSet = set()
 namesURL = 'names.txt'
+illegalCharacters = ['\\','{','}'] #characters that a word can't start with
 
 #try to guess what is a name by looking for capitalized letters in the middle of sentences
 def getGuessedNames():
@@ -23,7 +26,7 @@ def getGuessedNames():
         f.write(name) + '\n'
 
 def guessNames(line):
-    nameRegex = re.compile('[^\.] ([ABCDEFGHIJKLMNOPQRSTUVWXYZ]\w+)')
+    nameRegex = re.compile('[^\.] ([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w+|\.])')
     names = nameRegex.search(line)
 
     try: 
@@ -33,20 +36,41 @@ def guessNames(line):
     except:
         return
 
+def valid(word):
+    if len(word) == 0:
+        return False;
+    if word[0] in illegalCharacters:
+        return False
+    return True
+
 #parse a line and add the words to the dictionaries
-def addLine(line):
+def addLine(line, currentDate):
     words = line.split(' ')
     for word in words:
         word = word.strip().lower()
 
-        try:
-            if word in namesSet:
+        if not valid(word):
+            continue
+
+        #names
+        if word in namesSet:
+            try:
                 namesDict[word] += 1
-            wordsDict[word] += 1
-        except:
-            if word in namesSet:
+            except:
                 namesDict[word] = 1
-            wordsDict[word] = 1
+
+        #words
+        try:
+            wordsDict[word] = (wordsDict[word][0] + 1, currentDate)
+        except:
+            wordsDict[word] = (1, currentDate)
+        
+        #words per day
+        try:
+            if wordsPerDayDict[word][1] != currentDate:
+                wordsPerDayDict[word] = (wordsPerDayDict[word][0] + 1, currentDate)
+        except:
+                wordsPerDayDict[word] = (1, currentDate)
 
 def lookupWord():
     inp = raw_input('Enter word for lookup: ')
@@ -55,7 +79,7 @@ def lookupWord():
 def printAll(names):
     printHighest(float('inf'), names)
 
-def printHighest(num, names):
+def printHighest(num, names, perDay):
     if names == True:
         sortedNamesDict = sorted(namesDict.items(), key=operator.itemgetter(1))
         sortedNamesDict.reverse()
@@ -64,28 +88,37 @@ def printHighest(num, names):
             num = len(sortedNamesDict);
         for x in xrange(0,num):
             print sortedNamesDict[x];
-    else:
+    elif perDay == False:
         sortedWordsDict = sorted(wordsDict.items(), key=operator.itemgetter(1))
         sortedWordsDict.reverse()
         if num > len(sortedWordsDict):
             num = len(sortedWordsDict);
         for x in xrange(0,num):
             print sortedWordsDict[x];
+    else:
+        sortedWordsPerDayDict = sorted(wordsPerDayDict.items(), key=operator.itemgetter(1))
+        sortedWordsPerDayDict.reverse()
+        if num > len(sortedWordsPerDayDict):
+            num = len(sortedWordsPerDayDict);
+        for x in xrange(0,num):
+            print sortedWordsPerDayDict[x];
+
 
 def main(url):
     f = open(url, 'r')
     line = f.readline()
-    while (line != ''):
 
+    currentDate = None;
+    while (line != ''):
         #check a line to see if it's a date, therefore a new day
-        newdate = re.compile('\s*[0-9]{1,2}-[0-9]{1,2}-[0-9]{1,2}\s*')
+        newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{1,2})\s*')
         res = newdate.match(line)
         if res != None: #date found
-            pass
-        else:
-            pass
-        addLine(line)
-        guessNames(line)
+            currentDate = res.group(0);
+
+        if currentDate != None:
+            addLine(line, currentDate)
+            guessNames(line)
         line = f.readline()
 
 #populate namesList from file
@@ -105,12 +138,14 @@ if __name__ == '__main__':
     #main('/users/dirk/desktop/journal_test.txt')
     main('/Volumes/Disk Image/journal.rtf')
     #printAll(True)
-    lookupWord();
+    printHighest(50, False, False)
+
 
 
 
 '''
 TODO: 
 add per day
+strip punctuation
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
 '''
