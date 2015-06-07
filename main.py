@@ -49,7 +49,7 @@ def valid(word):
 
 def cleanWord(word):
     word = word.strip().lstrip().lower();
-    regex = re.compile('([\w|-]*)')
+    regex = re.compile('([\w|-|\']*)')
     match = regex.match(word)
     word = match.group(0)
     return word
@@ -69,6 +69,13 @@ def addLine(line, currentDate):
                 namesDict[word] = (namesDict[word][0] + 1, currentDate)
             except:
                 namesDict[word] = (1, currentDate)
+
+            #names per day
+            try:
+                if namesPerDayDict[word][1] != currentDate:
+                    namesPerDayDict[word] = (namesPerDayDict[word][0] + 1, currentDate)
+            except:
+                namesPerDayDict[word] = (1, currentDate)
 
         #words
         try:
@@ -94,6 +101,7 @@ def makeOutputPretty(inp): #( word : ( count , last occurence ) )
     word = inp[0]
     count = inp[1][0]
     date = inp[1][1]
+
     if len(word) <= WORD_COL_WIDTH:
         print word,
         chars_left = WORD_COL_WIDTH - len(word)
@@ -110,23 +118,31 @@ def makeOutputPretty(inp): #( word : ( count , last occurence ) )
     
 #print the x most occuring words
 #num: number to print. if 'all', prints all
-def printHighest(num, names, perDay):
+def printHighest(num, option):
     if num == 'all':
         num = float('inf')
-    if names == True:
+    if option == 'names':
         sortedNamesDict = sorted(namesDict.items(), key=operator.itemgetter(1))
         sortedNamesDict.reverse()
         if num > len(sortedNamesDict):
             num = len(sortedNamesDict)
         for x in xrange(0,num):
             makeOutputPretty(sortedNamesDict[x])
-    elif perDay == True:
+    elif option == 'wordsPerDay':
         sortedWordsPerDayDict = sorted(wordsPerDayDict.items(), key=operator.itemgetter(1))
         sortedWordsPerDayDict.reverse()
         if num > len(sortedWordsPerDayDict):
             num = len(sortedWordsPerDayDict)
         for x in xrange(0,num):
             makeOutputPretty(sortedWordsPerDayDict[x])
+    elif option == 'namesPerDay':
+        print 'printing  names per day'
+        sortedNamesPerDayDict = sorted(namesPerDayDict.items(), key=operator.itemgetter(1))
+        sortedNamesPerDayDict.reverse()
+        if num > len(sortedNamesPerDayDict):
+            num = len(sortedNamesPerDayDict)
+        for x in xrange(0,num):
+            makeOutputPretty(sortedNamesPerDayDict[x])
     else: #regular words
         sortedWordsDict = sorted(wordsDict.items(), key=operator.itemgetter(1))
         sortedWordsDict.reverse()
@@ -171,15 +187,13 @@ if __name__ == '__main__':
     #parser.parse_args()
     #main('/users/dirk/desktop/journal_test.txt')
     main('/Volumes/Disk Image/journal.rtf')
-    #printAll(True)
-    printHighest('all', False, True)
+    printHighest(50, 'namesPerDay')
 
 
 
 
 '''
 TODO: 
-add per day
-strip punctuation
+something weird going on with apostrophes (specifically "didn't")
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
 '''
