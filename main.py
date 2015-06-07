@@ -47,11 +47,18 @@ def valid(word):
         return False
     return True
 
+def cleanWord(word):
+    word = word.strip().lstrip().lower();
+    regex = re.compile('([\w|-]*)')
+    match = regex.match(word)
+    word = match.group(0)
+    return word
+
 #parse a line and add the words to the dictionaries
 def addLine(line, currentDate):
     words = line.split(' ')
     for word in words:
-        word = word.strip().lower()
+        word = cleanWord(word)
 
         if not valid(word):
             continue
@@ -141,6 +148,7 @@ def main(url):
         res = newdate.match(line)
         if res != None: #date found
             currentDate = res.group(0);
+            line = line[len(currentDate):] #remove date from line, so it's not a word
 
         if currentDate != None:
             addLine(line, currentDate)
