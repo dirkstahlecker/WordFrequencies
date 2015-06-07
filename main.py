@@ -11,6 +11,10 @@ guessedNamesSet = set()
 namesURL = 'names.txt'
 illegalCharacters = ['\\','{','}'] #characters that a word can't start with
 
+WORD_COL_WIDTH = 20
+NUM_COL_WIDTH = 6
+DATE_COL_WIDTH = 8
+
 #try to guess what is a name by looking for capitalized letters in the middle of sentences
 def getGuessedNames():
     f = open(namesURL, 'r+')
@@ -55,9 +59,9 @@ def addLine(line, currentDate):
         #names
         if word in namesSet:
             try:
-                namesDict[word] += 1
+                namesDict[word] = (namesDict[word][0] + 1, currentDate)
             except:
-                namesDict[word] = 1
+                namesDict[word] = (1, currentDate)
 
         #words
         try:
@@ -79,29 +83,51 @@ def lookupWord():
 def printAll(names):
     printHighest(float('inf'), names)
 
+def makeOutputPretty(inp): #( word : ( count , last occurence ) )
+    word = inp[0]
+    count = inp[1][0]
+    date = inp[1][1]
+    if len(word) <= WORD_COL_WIDTH:
+        print word,
+        chars_left = WORD_COL_WIDTH - len(word)
+        print ' ' * chars_left,
+    else:
+        print word[:WORD_COL_WIDTH],
+
+    #TODO: deal with overshoot on numbers and date
+    print count,
+    print ' ' * (NUM_COL_WIDTH - len(str(count))),
+
+    print date,
+    print ' ' * (DATE_COL_WIDTH - len(date))
+    
+#print the x most occuring words
+#num: number to print. if 'all', prints all
 def printHighest(num, names, perDay):
+    if num == 'all':
+        num = float('inf')
     if names == True:
         sortedNamesDict = sorted(namesDict.items(), key=operator.itemgetter(1))
         sortedNamesDict.reverse()
-
         if num > len(sortedNamesDict):
-            num = len(sortedNamesDict);
+            num = len(sortedNamesDict)
         for x in xrange(0,num):
-            print sortedNamesDict[x];
-    elif perDay == False:
-        sortedWordsDict = sorted(wordsDict.items(), key=operator.itemgetter(1))
-        sortedWordsDict.reverse()
-        if num > len(sortedWordsDict):
-            num = len(sortedWordsDict);
-        for x in xrange(0,num):
-            print sortedWordsDict[x];
-    else:
+            makeOutputPretty(sortedNamesDict[x])
+    elif perDay == True:
         sortedWordsPerDayDict = sorted(wordsPerDayDict.items(), key=operator.itemgetter(1))
         sortedWordsPerDayDict.reverse()
         if num > len(sortedWordsPerDayDict):
-            num = len(sortedWordsPerDayDict);
+            num = len(sortedWordsPerDayDict)
         for x in xrange(0,num):
-            print sortedWordsPerDayDict[x];
+            makeOutputPretty(sortedWordsPerDayDict[x])
+    else: #regular words
+        sortedWordsDict = sorted(wordsDict.items(), key=operator.itemgetter(1))
+        sortedWordsDict.reverse()
+        if num > len(sortedWordsDict):
+            num = len(sortedWordsDict)
+        for x in xrange(0,num):
+            makeOutputPretty(sortedWordsDict[x])
+
 
 
 def main(url):
@@ -138,7 +164,7 @@ if __name__ == '__main__':
     #main('/users/dirk/desktop/journal_test.txt')
     main('/Volumes/Disk Image/journal.rtf')
     #printAll(True)
-    printHighest(50, False, False)
+    printHighest('all', False, True)
 
 
 
