@@ -1,6 +1,7 @@
 import argparse
 import re
 import operator
+import argparse
 
 namesSet = set()
 wordsDict = {} #{ word : ( count , last occurence ) }
@@ -90,9 +91,16 @@ def addLine(line, currentDate):
         except:
                 wordsPerDayDict[word] = (1, currentDate)
 
-def lookupWord():
-    inp = raw_input('Enter word for lookup: ')
-    print inp + ': ' + str(wordsDict[inp])
+def lookupWordPrompt():
+    while True:
+        inp = raw_input('Enter word for lookup: ')
+        try:
+            print inp + ': ' + str(wordsDict[inp])
+        except:
+            print 'Word not found'
+
+def lookupWord(word):
+    print word + ': ' + str(wordsDict[word])
 
 def printAll(names):
     printHighest(float('inf'), names)
@@ -136,7 +144,6 @@ def printHighest(num, option):
         for x in xrange(0,num):
             makeOutputPretty(sortedWordsPerDayDict[x])
     elif option == 'namesPerDay':
-        print 'printing  names per day'
         sortedNamesPerDayDict = sorted(namesPerDayDict.items(), key=operator.itemgetter(1))
         sortedNamesPerDayDict.reverse()
         if num > len(sortedNamesPerDayDict):
@@ -152,8 +159,7 @@ def printHighest(num, option):
             makeOutputPretty(sortedWordsDict[x])
 
 
-
-def main(url):
+def readFile(url):
     f = open(url, 'r')
     line = f.readline()
 
@@ -171,6 +177,45 @@ def main(url):
             guessNames(line)
         line = f.readline()
 
+def callInputFunction(inp, arg):
+    print 'inp: ',
+    print inp,
+    print type(inp)
+    print 'arg: ',
+    print arg,
+    print type(arg)
+    if inp == 'highest':
+        printHighest(int(arg), None)
+    elif inp == 'lookup':
+        lookupWord(arg)
+    elif inp == 'names':
+        printHighest(arg, 'names')
+    else:
+        pass
+
+def main():
+    readFile('/Volumes/Disk Image/journal.rtf')
+    makeNamesSet()
+
+    legalWordParts = '[^{}]'
+    regexDict = {
+        re.compile('\s*highest ([[0-9]+|all])\s*'): 'highest',
+        re.compile('\s*[l|L]ookup ([^{}]+)\s*'): 'lookup',
+        re.compile('\s*names ([[0-9]+|all])\s*'): 'names'
+    }
+
+    print('Options:\n   Highest x words (highest [num | all])\n   Lookup (lookup [word])\n   Highest x names(names [num | all])')
+    while True:
+        inp = raw_input('>')
+
+        for regex in regexDict.keys():
+            matches = regex.match(inp)
+
+            if matches != None:
+                callInputFunction(regexDict[regex], matches.groups(0)[0])
+
+
+
 #populate namesList from file
 def makeNamesSet():
     f = open(namesURL, 'r') #TODO: error handling
@@ -181,13 +226,11 @@ def makeNamesSet():
         line = f.readline()
 
 if __name__ == '__main__':
-    makeNamesSet()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file", help="Path to file to examine")
+    args = parser.parse_args()
 
-    #parser = argparse.ArgumentParser()
-    #parser.parse_args()
-    #main('/users/dirk/desktop/journal_test.txt')
-    main('/Volumes/Disk Image/journal.rtf')
-    printHighest(50, 'namesPerDay')
+    main()
 
 
 
