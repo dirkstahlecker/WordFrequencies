@@ -86,14 +86,21 @@ def addLine(line, currentDate):
 
             #names for graphing purposes
             try:
+                if word == 'amin': print 'in try'
                 namesToGraphDict[word] #trigger exception
                 if namesToGraphDict[word][-1][0] == currentDate: #increment count
+                    if word == 'amin': print 'increment'
                     namesToGraphDict[word][-1][1] += 1
+                    if word == 'amin': print namesToGraphDict['amin']
                 else: #start a new tuple with a new date
-                    namesToGraphDict[word][-1].append([currentDate, 1])
+                    if word == 'amin': print 'new tuple'
+                    namesToGraphDict[word].append([currentDate, 1])
+                    if word == 'amin': print namesToGraphDict['amin']
 
             except: #this name hasn't been encountered yet
+                if word == 'amin': print 'exception triggered'
                 namesToGraphDict[word] = [[currentDate, 1]]
+                if word == 'amin': print namesToGraphDict['amin']
 
         #words
         try:
@@ -133,16 +140,28 @@ def graphAnalytics():
         datetime.datetime(2011, 5, 5, 9, 0)]
     y = [4, 9, 2]
     '''
-    
-    x = namesPerDayDatesListDict['becca'][1]
-    y = [count]
 
+    #{ word : [ [ date , count ] ] }
+    #x = [date[0] for date in namesToGraphDict['becca']]
+    #y = [count[1] for count in namesToGraphDict['becca']]
+
+
+    x = []
+    y = []
+    for el in namesToGraphDict['becca']:
+        print 'hello'
+        x.append(el[0])
+        y.append(el[1])
+
+    print x
+    print y
+    '''
     ax = plt.subplot(111)
     ax.bar(x, y, width=10)
     ax.xaxis_date()
 
     plt.show()
-
+    '''
 
 def lookupWordPrompt():
     while True:
