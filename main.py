@@ -109,38 +109,13 @@ def addLine(line, currentDate):
                 wordsPerDayDict[word] = (1, currentDate)
 
 #Used to output to a format that excel can import
-def graphAnalytics():
-    for key in namesPerDayDict:
-        namesList = namesPerDayDict[key]
-    '''
-    plt.figure();
-
-    #create some data
-    x_series = [0,1,2,3,4,5]
-    y_series_1 = [x**2 for x in x_series]
-    y_series_2 = [x**3 for x in x_series]
-     
-    #plot the two lines
-    plt.plot(x_series, y_series_1)
-    plt.plot(x_series, y_series_2)
-
-    plt.savefig("example.png")
-    '''
-
-    '''
-    x = [datetime.datetime(2010, 12, 1, 10, 0),
-        datetime.datetime(2011, 1, 4, 9, 0),
-        datetime.datetime(2011, 5, 5, 9, 0)]
-    y = [4, 9, 2]
-    '''
-
+def graphAnalytics(name):
     #{ word : [ [ date , count ] ] }
-    x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in namesToGraphDict['becca']]
-    y = [count[1] for count in namesToGraphDict['becca']]
-
+    x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in namesToGraphDict[name]]
+    y = [count[1] for count in namesToGraphDict[name]]
     
     ax = plt.subplot(111)
-    ax.bar(x, y, width=10)
+    ax.bar(x, y, width=4)
     ax.xaxis_date()
 
     plt.show()
@@ -222,7 +197,7 @@ def formatDate(date_in):
     if re.search('^[0-9]-', date):
         date = '0' + date
     if re.search('-[0-9]-', date):
-        date = date[:2] + '0' + date[2:]
+        date = date[:3] + '0' + date[3:]
 
     return date
 
@@ -258,6 +233,8 @@ def callInputFunction(inp, arg):
         lookupWord(arg)
     elif inp == 'names':
         printHighest(int(arg), 'names')
+    elif inp == 'graph':
+        graphAnalytics(arg)
     else:
         pass
 
@@ -267,24 +244,27 @@ def main(args):
 
     legalWordParts = '[^{}]'
     regexDict = {
-        re.compile('\s*highest ([[0-9]+|all])\s*'): 'highest',
-        re.compile('\s*[l|L]ookup ([^{}]+)\s*'): 'lookup',
-        re.compile('\s*names ([[0-9]+|all])\s*'): 'names'
+        re.compile('\s*highest\s+([[0-9]+|all])\s*'): 'highest',
+        re.compile('\s*[l|L]ookup\s+([^{}]+)\s*'): 'lookup',
+        re.compile('\s*names\s+([[0-9]+|all])\s*'): 'names',
+        re.compile('\s*graph\s+([^{}]+)\s*'): 'graph'
     }
 
-    graphAnalytics();
-
-    '''
-    print('Options:\n   Highest x words (highest [num | all])\n   Lookup (lookup [word])\n   Highest x names(names [num | all])')
+    
+    print '''
+Options:
+Highest x words         highest [num | all]
+Lookup                  lookup [word]
+Highest x names         names [num | all]
+Graph                   graph [name]
+        '''
     while True:
         inp = raw_input('>')
-
         for regex in regexDict.keys():
             matches = regex.match(inp)
-
             if matches != None:
                 callInputFunction(regexDict[regex], matches.groups(0)[0])
-    '''
+    
 
 
 def enableVerbosity():
