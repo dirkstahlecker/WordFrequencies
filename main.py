@@ -3,7 +3,7 @@ import re
 import operator
 import argparse
 import matplotlib.pyplot as plt
-import datetime
+from datetime import datetime
 
 namesSet = set()
 wordsDict = {} #{ word : ( count , last occurence ) }
@@ -86,21 +86,14 @@ def addLine(line, currentDate):
 
             #names for graphing purposes
             try:
-                if word == 'amin': print 'in try'
                 namesToGraphDict[word] #trigger exception
                 if namesToGraphDict[word][-1][0] == currentDate: #increment count
-                    if word == 'amin': print 'increment'
                     namesToGraphDict[word][-1][1] += 1
-                    if word == 'amin': print namesToGraphDict['amin']
                 else: #start a new tuple with a new date
-                    if word == 'amin': print 'new tuple'
                     namesToGraphDict[word].append([currentDate, 1])
-                    if word == 'amin': print namesToGraphDict['amin']
 
             except: #this name hasn't been encountered yet
-                if word == 'amin': print 'exception triggered'
                 namesToGraphDict[word] = [[currentDate, 1]]
-                if word == 'amin': print namesToGraphDict['amin']
 
         #words
         try:
@@ -142,26 +135,16 @@ def graphAnalytics():
     '''
 
     #{ word : [ [ date , count ] ] }
-    #x = [date[0] for date in namesToGraphDict['becca']]
-    #y = [count[1] for count in namesToGraphDict['becca']]
+    x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in namesToGraphDict['becca']]
+    y = [count[1] for count in namesToGraphDict['becca']]
 
-
-    x = []
-    y = []
-    for el in namesToGraphDict['becca']:
-        print 'hello'
-        x.append(el[0])
-        y.append(el[1])
-
-    print x
-    print y
-    '''
+    
     ax = plt.subplot(111)
     ax.bar(x, y, width=10)
     ax.xaxis_date()
 
     plt.show()
-    '''
+    
 
 def lookupWordPrompt():
     while True:
@@ -230,6 +213,18 @@ def printHighest(num, option):
         for x in xrange(0,num):
             makeOutputPretty(sortedWordsDict[x])
 
+#Put date into a format that can be recognized by datetime
+def formatDate(date_in):
+    date = date_in.strip().lstrip();
+
+    #currently assume they're fairly correctly formatted
+    #won't get in here in the first place if they're not
+    if re.search('^[0-9]-', date):
+        date = '0' + date
+    if re.search('-[0-9]-', date):
+        date = date[:2] + '0' + date[2:]
+
+    return date
 
 def readFile(url):
     f = open(url, 'r')
@@ -238,10 +233,11 @@ def readFile(url):
     currentDate = None;
     while (line != ''):
         #check a line to see if it's a date, therefore a new day
-        newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{1,2})\s*')
+        newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
         res = newdate.match(line)
         if res != None: #date found
             currentDate = res.group(0);
+            currentDate = formatDate(currentDate)
             line = line[len(currentDate):] #remove date from line, so it's not a word
 
         if currentDate != None:
@@ -318,7 +314,6 @@ if __name__ == '__main__':
 TODO: 
 something weird going on with apostrophes (specifically "didn't")
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
-strip spaces off dates
 
 analytics:
 store dates of names, export to excel, graph
