@@ -2,12 +2,15 @@ import argparse
 import re
 import operator
 import argparse
+import matplotlib.pyplot as plt
+import datetime
 
 namesSet = set()
 wordsDict = {} #{ word : ( count , last occurence ) }
 namesDict = {} #{ name : ( count , last occurence ) }
 wordsPerDayDict = {} #{ word : ( count , last occurence ) } only counts one occurence per day
 namesPerDayDict = {} #{ word : ( count , last occurence ) }
+namesToGraphDict = {} #{ word : [ [ date , count ] ] }
 guessedNamesSet = set()
 namesURL = 'names.txt'
 illegalCharacters = ['\\','{','}'] #characters that a word can't start with
@@ -15,6 +18,8 @@ illegalCharacters = ['\\','{','}'] #characters that a word can't start with
 WORD_COL_WIDTH = 20
 NUM_COL_WIDTH = 6
 DATE_COL_WIDTH = 8
+
+debug = False
 
 #try to guess what is a name by looking for capitalized letters in the middle of sentences
 def getGuessedNames():
@@ -64,6 +69,7 @@ def addLine(line, currentDate):
         if not valid(word):
             continue
 
+
         #names
         if word in namesSet:
             try:
@@ -78,6 +84,17 @@ def addLine(line, currentDate):
             except:
                 namesPerDayDict[word] = (1, currentDate)
 
+            #names for graphing purposes
+            try:
+                namesToGraphDict[word] #trigger exception
+                if namesToGraphDict[word][-1][0] == currentDate: #increment count
+                    namesToGraphDict[word][-1][1] += 1
+                else: #start a new tuple with a new date
+                    namesToGraphDict[word][-1].append([currentDate, 1])
+
+            except: #this name hasn't been encountered yet
+                namesToGraphDict[word] = [[currentDate, 1]]
+
         #words
         try:
             wordsDict[word] = (wordsDict[word][0] + 1, currentDate)
@@ -90,6 +107,42 @@ def addLine(line, currentDate):
                 wordsPerDayDict[word] = (wordsPerDayDict[word][0] + 1, currentDate)
         except:
                 wordsPerDayDict[word] = (1, currentDate)
+
+#Used to output to a format that excel can import
+def graphAnalytics():
+    for key in namesPerDayDict:
+        namesList = namesPerDayDict[key]
+    '''
+    plt.figure();
+
+    #create some data
+    x_series = [0,1,2,3,4,5]
+    y_series_1 = [x**2 for x in x_series]
+    y_series_2 = [x**3 for x in x_series]
+     
+    #plot the two lines
+    plt.plot(x_series, y_series_1)
+    plt.plot(x_series, y_series_2)
+
+    plt.savefig("example.png")
+    '''
+
+    '''
+    x = [datetime.datetime(2010, 12, 1, 10, 0),
+        datetime.datetime(2011, 1, 4, 9, 0),
+        datetime.datetime(2011, 5, 5, 9, 0)]
+    y = [4, 9, 2]
+    '''
+    
+    x = namesPerDayDatesListDict['becca'][1]
+    y = [count]
+
+    ax = plt.subplot(111)
+    ax.bar(x, y, width=10)
+    ax.xaxis_date()
+
+    plt.show()
+
 
 def lookupWordPrompt():
     while True:
@@ -189,13 +242,13 @@ def callInputFunction(inp, arg):
     elif inp == 'lookup':
         lookupWord(arg)
     elif inp == 'names':
-        printHighest(arg, 'names')
+        printHighest(int(arg), 'names')
     else:
         pass
 
-def main():
-    readFile('/Volumes/Disk Image/journal.rtf')
+def main(args):
     makeNamesSet()
+    readFile(args.file)
 
     legalWordParts = '[^{}]'
     regexDict = {
@@ -204,6 +257,9 @@ def main():
         re.compile('\s*names ([[0-9]+|all])\s*'): 'names'
     }
 
+    graphAnalytics();
+
+    '''
     print('Options:\n   Highest x words (highest [num | all])\n   Lookup (lookup [word])\n   Highest x names(names [num | all])')
     while True:
         inp = raw_input('>')
@@ -213,8 +269,11 @@ def main():
 
             if matches != None:
                 callInputFunction(regexDict[regex], matches.groups(0)[0])
+    '''
 
 
+def enableVerbosity():
+    verbose = True;
 
 #populate namesList from file
 def makeNamesSet():
@@ -228,9 +287,10 @@ def makeNamesSet():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="Path to file to examine")
+    #parser.add_argument('-v', '--verbose', help="Enable verbose output", action="enableVerbosity")
     args = parser.parse_args()
 
-    main()
+    main(args)
 
 
 
@@ -239,4 +299,8 @@ if __name__ == '__main__':
 TODO: 
 something weird going on with apostrophes (specifically "didn't")
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
+strip spaces off dates
+
+analytics:
+store dates of names, export to excel, graph
 '''
