@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 namesSet = set()
-wordsDict = {} #{ word : ( count , last occurence ) }
+wordsDict = {} #{ word : ( count , last occurence , first occurence ) }
 namesDict = {} #{ name : ( count , last occurence ) }
 wordsPerDayDict = {} #{ word : ( count , last occurence ) } only counts one occurence per day
 namesPerDayDict = {} #{ word : ( count , last occurence ) }
@@ -46,6 +46,13 @@ def guessNames(line):
     except:
         return
 
+#Add a name manually to the names set
+def addName(name):
+    namesSet.add(name);
+
+def removeName(name):
+    namesSet.remove(name);
+
 def valid(word):
     if len(word) == 0:
         return False;
@@ -68,7 +75,6 @@ def addLine(line, currentDate):
 
         if not valid(word):
             continue
-
 
         #names
         if word in namesSet:
@@ -97,9 +103,9 @@ def addLine(line, currentDate):
 
         #words
         try:
-            wordsDict[word] = (wordsDict[word][0] + 1, currentDate)
+            wordsDict[word] = (wordsDict[word][0] + 1, currentDate, wordsDict[word][2])
         except:
-            wordsDict[word] = (1, currentDate)
+            wordsDict[word] = (1, currentDate, currentDate)
         
         #words per day
         try:
@@ -108,18 +114,20 @@ def addLine(line, currentDate):
         except:
                 wordsPerDayDict[word] = (1, currentDate)
 
-#Used to output to a format that excel can import
+#graphs the number of occurences of the name per day
 def graphAnalytics(name):
     #{ word : [ [ date , count ] ] }
-    x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in namesToGraphDict[name]]
-    y = [count[1] for count in namesToGraphDict[name]]
-    
-    ax = plt.subplot(111)
-    ax.bar(x, y, width=4)
-    ax.xaxis_date()
+    try:
+        x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in namesToGraphDict[name]]
+        y = [count[1] for count in namesToGraphDict[name]]
+        
+        ax = plt.subplot(111)
+        ax.bar(x, y, width=2)
+        ax.xaxis_date()
 
-    plt.show()
-    
+        plt.show()
+    except:
+        print 'Illegal input - must be a valid name'
 
 def lookupWordPrompt():
     while True:
@@ -129,30 +137,75 @@ def lookupWordPrompt():
         except:
             print 'Word not found'
 
+def splitDate(date):
+    split1 = date.find('-')
+    split2 = date.find('-',split1)
+    split2 = split2 + split1 + 1
+    return (int(date[:split1]), int(date[split1+1:split2]), int(date[split2+1:]))
+
+#returns date1 - date2 in date format
+def subtractDates(date1, date2): 
+    split1 = splitDate(date1)
+    date1 = datetime(year=split1[2], day=split1[1], month=split1[0])
+
+    split2 = splitDate(date2)
+    date2 = datetime(year=split2[2], day=split2[1], month=split2[0])
+
+    diff = date1 - date2
+    return diff
+
 def lookupWord(word):
-    print word + ': ' + str(wordsDict[word])
+    print word + ': '
+    print 'First usage: ' + str(wordsDict[word][2])
+    print 'Last usage: ' + str(wordsDict[word][1])
+    total_uses = wordsDict[word][0]
+    print 'Total usages: ' + str(total_uses)
+    length = subtractDates(wordsDict[word][1], wordsDict[word][2]).days
+    print 'Length from first use to last: ' + str(length)
+    print 'Average usages per day: ' + str(float(total_uses) / length)
+    #print 'Percentage of days with a useage: ' + str()
 
 def printAll(names):
     printHighest(float('inf'), names)
+
+def makeOutputPrettyHelper(header, word, count, date):
+    if header:
+        print 'Word',
+        print ' ' * (WORD_COL_WIDTH - 4),
+    else:
+        if len(word) <= WORD_COL_WIDTH:
+            print word,
+            chars_left = WORD_COL_WIDTH - len(word)
+            print ' ' * chars_left,
+        else:
+            print word[:WORD_COL_WIDTH],
+
+    if header:
+        print 'Count',
+        print ' ' * (NUM_COL_WIDTH - 5),
+    else:
+        #TODO: deal with overshoot on numbers and date
+        print count,
+        print ' ' * (NUM_COL_WIDTH - len(str(count))),
+
+    if header:
+        print 'Last Occurence',
+    else:
+        print date,
+    print ' ' * (DATE_COL_WIDTH - len(date))
+
+    if header:
+        print '-'*(38) #WORD_COL_WIDTH + NUM_COL_WIDTH + DATE_COL_WIDTH
+        #TODO: make this a variable rather than a hardcoded number (and figure out why the variable width is off by 4)
 
 def makeOutputPretty(inp): #( word : ( count , last occurence ) )
     word = inp[0]
     count = inp[1][0]
     date = inp[1][1]
+    makeOutputPrettyHelper(False, word, count, date)
 
-    if len(word) <= WORD_COL_WIDTH:
-        print word,
-        chars_left = WORD_COL_WIDTH - len(word)
-        print ' ' * chars_left,
-    else:
-        print word[:WORD_COL_WIDTH],
-
-    #TODO: deal with overshoot on numbers and date
-    print count,
-    print ' ' * (NUM_COL_WIDTH - len(str(count))),
-
-    print date,
-    print ' ' * (DATE_COL_WIDTH - len(date))
+def makePrettyHeader():
+    makeOutputPrettyHelper(True, '', '', '')
     
 #print the x most occuring words
 #num: number to print. if 'all', prints all
@@ -164,6 +217,7 @@ def printHighest(num, option):
         sortedNamesDict.reverse()
         if num > len(sortedNamesDict):
             num = len(sortedNamesDict)
+        makePrettyHeader()
         for x in xrange(0,num):
             makeOutputPretty(sortedNamesDict[x])
     elif option == 'wordsPerDay':
@@ -198,11 +252,15 @@ def formatDate(date_in):
         date = '0' + date
     if re.search('-[0-9]-', date):
         date = date[:3] + '0' + date[3:]
-
     return date
 
 def readFile(url):
-    f = open(url, 'r')
+    try:
+        f = open(url, 'r')
+    except:
+        print('File not found')
+        readFile(raw_input('Enter new path > ')) #TODO: not sure if this work
+    
     line = f.readline()
 
     currentDate = None;
@@ -221,12 +279,12 @@ def readFile(url):
         line = f.readline()
 
 def callInputFunction(inp, arg):
-    print 'inp: ',
+    '''print 'inp: ',
     print inp,
     print type(inp)
     print 'arg: ',
     print arg,
-    print type(arg)
+    print type(arg)'''
     if inp == 'highest':
         printHighest(int(arg), None)
     elif inp == 'lookup':
@@ -235,54 +293,71 @@ def callInputFunction(inp, arg):
         printHighest(int(arg), 'names')
     elif inp == 'graph':
         graphAnalytics(arg)
+    elif inp == 'wpd':
+        printHighest(int(arg), 'wordsPerDay')
+    elif inp == 'npd':
+        printHighest(int(arg), 'namesPerDay')
+    elif inp == 'addname':
+        addName(arg)
     else:
         pass
-
-def main(args):
-    makeNamesSet()
-    readFile(args.file)
-
-    legalWordParts = '[^{}]'
-    regexDict = {
-        re.compile('\s*highest\s+([[0-9]+|all])\s*'): 'highest',
-        re.compile('\s*[l|L]ookup\s+([^{}]+)\s*'): 'lookup',
-        re.compile('\s*names\s+([[0-9]+|all])\s*'): 'names',
-        re.compile('\s*graph\s+([^{}]+)\s*'): 'graph'
-    }
-
-    
-    print '''
-Options:
-Highest x words         highest [num | all]
-Lookup                  lookup [word]
-Highest x names         names [num | all]
-Graph                   graph [name]
-        '''
-    while True:
-        inp = raw_input('>')
-        for regex in regexDict.keys():
-            matches = regex.match(inp)
-            if matches != None:
-                callInputFunction(regexDict[regex], matches.groups(0)[0])
-    
-
 
 def enableVerbosity():
     verbose = True;
 
 #populate namesList from file
 def makeNamesSet():
-    f = open(namesURL, 'r') #TODO: error handling
+    try:
+        f = open(namesURL, 'r') #TODO: error handling
+    except:
+        raise Exception("Names file not found")
     namesSet.clear()
     line = f.readline()
     while line != '':
         namesSet.add(line.strip().lower())
         line = f.readline()
 
+def main(args):
+    makeNamesSet()
+    readFile(args.file)
+    
+    legalWordParts = '[^{}]'
+    #TODO: there's a better way to do this I'm sure
+    regexDict = {
+        re.compile('\s*highest\s+([[0-9]+|all])\s*', re.IGNORECASE): 'highest',
+        re.compile('\s*wpd\s+([[0-9]+|all])\s*', re.IGNORECASE): 'wpd',
+        re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
+        re.compile('\s*names\s+([[0-9]+|all])\s*', re.IGNORECASE): 'names',
+        re.compile('\s*npd\s+([[0-9]+|all])\s*', re.IGNORECASE): 'npd',
+        re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
+        re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
+        re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
+    }
+    
+    while True:
+        print '''
+Options:
+Highest x words             highest [num | all]
+Highest x words per day     wpd [num | all]
+Lookup                      lookup [word]
+Highest x names             names [num | all]
+Highest x names per day     npd [num | all]
+Graph                       graph [name]
+Add name                    add name [name]
+Exit                        exit
+'''
+        inp = raw_input('>')
+        for regex in regexDict.keys():
+            matches = regex.match(inp)
+            if matches != None:
+                if regexDict[regex] == 'exit':
+                    return
+                callInputFunction(regexDict[regex], matches.groups(0)[0])
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="Path to file to examine")
-    #parser.add_argument('-v', '--verbose', help="Enable verbose output", action="enableVerbosity")
+    #parser.add_argument('-v', '--verbose', help="Enable verbose output", action="enableVerbosity()")
     args = parser.parse_args()
 
     main(args)
@@ -295,6 +370,11 @@ TODO:
 something weird going on with apostrophes (specifically "didn't")
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
 
+distinguish between different people with the same spelling of names
+    possibly by looking at other people that are frequently mentioned with them in the same day to determine
+
+length of entries / average length of entries per day / look up or graph trends
+
 analytics:
-store dates of names, export to excel, graph
+
 '''
