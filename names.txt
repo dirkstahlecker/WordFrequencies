@@ -1,10 +1,11 @@
-Shinjini
+clio
+sam
+anni
 Felicia
 Sherri
 Randi
 Chennah
 Sabina
-Marvin
 Dan
 Monique
 Erwin
@@ -17,7 +18,8 @@ Fiona
 Grammie
 George
 Kevin
-ChaseRex
+Chase
+Rex
 JJ
 Christie
 Akshay

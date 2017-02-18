@@ -1,5 +1,6 @@
 import argparse
 import re
+import os
 import operator
 import argparse
 import matplotlib.pyplot as plt
@@ -12,7 +13,7 @@ wordsPerDayDict = {} #{ word : ( count , last occurence ) } only counts one occu
 namesPerDayDict = {} #{ word : ( count , last occurence ) }
 namesToGraphDict = {} #{ word : [ [ date , count ] ] }
 guessedNamesSet = set()
-namesURL = 'names.txt'
+namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
 illegalCharacters = ['\\','{','}'] #characters that a word can't start with
 
 WORD_COL_WIDTH = 20
@@ -48,10 +49,21 @@ def guessNames(line):
 
 #Add a name manually to the names set
 def addName(name):
+    if name in namesDict:
+        print "Name already added"
+        return
     namesSet.add(name);
+    f = open(namesURL, 'a')
+    f.write(name + '\n')
+    f.close()
 
 def removeName(name):
     namesSet.remove(name);
+    f = open(namesURL, 'r+')
+    f.clear()
+    for name in namesSet:
+        f.write(name) + '\n'
+    f.close()
 
 def valid(word):
     if len(word) == 0:
@@ -211,7 +223,12 @@ def makePrettyHeader():
 #num: number to print. if 'all', prints all
 def printHighest(num, option):
     if num == 'all':
-        num = float('inf')
+        print "setting to all"
+        num = len(namesDict) #TODO: all doesn't work
+        print num
+    num = int(num)
+    print "num: ",
+    print num
     if option == 'names':
         sortedNamesDict = sorted(namesDict.items(), key=operator.itemgetter(1))
         sortedNamesDict.reverse()
@@ -286,17 +303,20 @@ def callInputFunction(inp, arg):
     print arg,
     print type(arg)'''
     if inp == 'highest':
-        printHighest(int(arg), None)
+        printHighest(arg, None)
     elif inp == 'lookup':
         lookupWord(arg)
     elif inp == 'names':
-        printHighest(int(arg), 'names')
+        print "names called: "
+        print "arg: ",
+        print arg
+        printHighest(arg, 'names')
     elif inp == 'graph':
         graphAnalytics(arg)
     elif inp == 'wpd':
-        printHighest(int(arg), 'wordsPerDay')
+        printHighest(arg, 'wordsPerDay')
     elif inp == 'npd':
-        printHighest(int(arg), 'namesPerDay')
+        printHighest(arg, 'namesPerDay')
     elif inp == 'addname':
         addName(arg)
     else:
@@ -327,7 +347,7 @@ def main(args):
         re.compile('\s*highest\s+([[0-9]+|all])\s*', re.IGNORECASE): 'highest',
         re.compile('\s*wpd\s+([[0-9]+|all])\s*', re.IGNORECASE): 'wpd',
         re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
-        re.compile('\s*names\s+([[0-9]+|all])\s*', re.IGNORECASE): 'names',
+        re.compile('\s*names\s+([0-9]+|all)\s*', re.IGNORECASE): 'names',
         re.compile('\s*npd\s+([[0-9]+|all])\s*', re.IGNORECASE): 'npd',
         re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
         re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
