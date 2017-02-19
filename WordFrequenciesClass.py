@@ -13,6 +13,8 @@ class WordFrequencies:
     wordsPerDayDict = {} #{ word : ( count , last occurence ) } only counts one occurence per day
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
+    namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
+    wordCountOfEntriesDict = {} #{ date : word count }
     guessedNamesSet = set()
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     illegalCharacters = ['\\','{','}'] #characters that a word can't start with
@@ -22,7 +24,6 @@ class WordFrequencies:
     DATE_COL_WIDTH = 8
 
     debug = False
-
 
 
     #try to guess what is a name by looking for capitalized letters in the middle of sentences
@@ -101,20 +102,25 @@ class WordFrequencies:
                 #names per day
                 try:
                     if self.namesPerDayDict[word][1] != currentDate:
-                        nself.amesPerDayDict[word] = (self.namesPerDayDict[word][0] + 1, currentDate)
+                        self.namesPerDayDict[word] = (self.namesPerDayDict[word][0] + 1, currentDate)
                 except:
                     self.namesPerDayDict[word] = (1, currentDate)
 
                 #names for graphing purposes
-                try:
+                try: #{ word : [ [ date , count ] ] }
                     self.namesToGraphDict[word] #trigger exception
                     if self.namesToGraphDict[word][-1][0] == currentDate: #increment count
                         self.namesToGraphDict[word][-1][1] += 1
                     else: #start a new tuple with a new date
                         self.namesToGraphDict[word].append([currentDate, 1])
-
                 except: #this name hasn't been encountered yet
                     self.namesToGraphDict[word] = [[currentDate, 1]]
+
+                #names for graph, counting on unique occurences
+                try: #{ word : [ date ] }
+                    self.namesToGraphDictUniqueOccurences[word].append(currentDate)
+                except:
+                    self.namesToGraphDictUniqueOccurences[word] = [currentDate]
 
             #words
             try:
@@ -128,6 +134,8 @@ class WordFrequencies:
                     self.wordsPerDayDict[word] = (self.wordsPerDayDict[word][0] + 1, currentDate)
             except:
                     self.wordsPerDayDict[word] = (1, currentDate)
+
+        return len(words)
 
     #graphs the number of occurences of the name per day
     def graphAnalytics(self, name):
@@ -143,6 +151,24 @@ class WordFrequencies:
             plt.show()
         except:
             print 'Illegal input - must be a valid name'
+    '''
+    #graphs unique occurences of a name per day
+    def graphAnalyticsPerDay(self, name):
+        #{ word : [ [ date , count ] ] }
+        try:
+            x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in self.namesToGraphDictUniqueOccurences[name]]
+            y = [count[1] for count in self.namesToGraphDictUniqueOccurences[name]]
+            
+            ax = plt.subplot(111)
+            ax.bar(x, y, width=2)
+            ax.set_xlabel('Date')
+            ax.set_ylabel('')
+            ax.xaxis_date()
+
+            plt.show()
+        except:
+            print 'Illegal input - must be a valid name'
+    '''
 
     def lookupWordPrompt(self):
         while True:
@@ -224,14 +250,11 @@ class WordFrequencies:
         
     #print the x most occuring words
     #num: number to print. if 'all', prints all
-    def printHighest(self, num, option):
-        if num == 'all':
-            print "setting to all"
-            num = len(self.namesDict) #TODO: all doesn't work
-            print num
-        num = int(num)
-        print "num: ",
-        print num
+    def printHighest(self, num_in, option):
+        if num_in == 'all':
+            num = len(self.namesDict)
+        else:
+            num = int(num_in)
         if option == 'names':
             self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
             self.sortedNamesDict.reverse()
@@ -279,43 +302,47 @@ class WordFrequencies:
             f = open(url, 'r')
         except:
             print('File not found')
-            readFile(raw_input('Enter new path > ')) #TODO: not sure if this work
+            self.readFile(raw_input('Enter new path > ')) #TODO: not sure if this works
+
+        newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
+        currentDate = None;
+        numWords = 0
         
         line = f.readline()
-
-        currentDate = None;
         while (line != ''):
             #check a line to see if it's a date, therefore a new day
-            newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
             res = newdate.match(line)
             if res != None: #date found
+                self.wordCountOfEntriesDict[currentDate] = numWords
+                numWords = 0
                 currentDate = res.group(0);
                 currentDate = self.formatDate(currentDate)
                 line = line[len(currentDate):] #remove date from line, so it's not a word
 
             if currentDate != None:
-                self.addLine(line, currentDate)
+                numWords += self.addLine(line, currentDate)
                 self.guessNames(line)
             line = f.readline()
+        try:
+            print self.wordCountOfEntriesDict['01-01-17']
+            print self.wordCountOfEntriesDict['01-02-17']
+            print self.wordCountOfEntriesDict['01-03-17']
+            print self.wordCountOfEntriesDict['01-04-17']
+            print self.wordCountOfEntriesDict['01-05-17']
+        except:
+            pass
 
     def callInputFunction(self, inp, arg):
-        '''print 'inp: ',
-        print inp,
-        print type(inp)
-        print 'arg: ',
-        print arg,
-        print type(arg)'''
         if inp == 'highest':
             self.printHighest(arg, None)
         elif inp == 'lookup':
             self.lookupWord(arg)
         elif inp == 'names':
-            print "names called: "
-            print "arg: ",
-            print arg
             self.printHighest(arg, 'names')
         elif inp == 'graph':
             self.graphAnalytics(arg)
+        elif inp == 'gpd':
+            self.graphAnalyticsPerDay(arg)
         elif inp == 'wpd':
             self.printHighest(arg, 'wordsPerDay')
         elif inp == 'npd':
@@ -340,20 +367,20 @@ class WordFrequencies:
             self.namesSet.add(line.strip().lower())
             line = f.readline()
 
-    def main(self, args):
+    def main(self, fileurl):
         self.makeNamesSet()
-
-        self.readFile(args.file)
+        self.readFile(fileurl)
         
         legalWordParts = '[^{}]'
         #TODO: there's a better way to do this I'm sure
         regexDict = {
-            re.compile('\s*highest\s+([[0-9]+|all])\s*', re.IGNORECASE): 'highest',
-            re.compile('\s*wpd\s+([[0-9]+|all])\s*', re.IGNORECASE): 'wpd',
+            re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
+            re.compile('\s*wpd\s+([\d]+|all)\s*', re.IGNORECASE): 'wpd',
             re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
-            re.compile('\s*names\s+([0-9]+|all)\s*', re.IGNORECASE): 'names',
-            re.compile('\s*npd\s+([[0-9]+|all])\s*', re.IGNORECASE): 'npd',
+            re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
+            re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
             re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
+            #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
             re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
             re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
         }
@@ -366,7 +393,8 @@ class WordFrequencies:
     Lookup                      lookup [word]
     Highest x names             names [num | all]
     Highest x names per day     npd [num | all]
-    Graph                       graph [name]
+    Graph names                 graph [name]
+    Graph names per day         gpd [name]
     Add name                    add name [name]
     Exit                        exit
     '''
@@ -386,16 +414,13 @@ if __name__ == '__main__':
     #parser.add_argument('-v', '--verbose', help="Enable verbose output", action="enableVerbosity()")
     args = parser.parse_args()
 
-    wf.main(args)
+    wf.main(args.file)
 
 
 
 
 '''
 TODO: 
-"all" option isn't working
-npd isn't working
-
 something weird going on with apostrophes (specifically "didn't")
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
 
