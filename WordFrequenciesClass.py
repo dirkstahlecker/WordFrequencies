@@ -14,7 +14,7 @@ class WordFrequencies:
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
-    wordCountOfEntriesDict = {} #{ date : word count }
+    wordCountOfEntriesDict = {} #{ datetime : word count }
     guessedNamesSet = set()
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     illegalCharacters = ['\\','{','}'] #characters that a word can't start with
@@ -70,6 +70,7 @@ class WordFrequencies:
         f.close()
 
     def valid(self, word):
+        word = self.cleanWord(word)
         if len(word) == 0:
             return False;
         if word[0] in self.illegalCharacters:
@@ -88,11 +89,11 @@ class WordFrequencies:
         words = line.split(' ')
 
         for word in words:
-            word = self.cleanWord(word)
-
             if not self.valid(word):
                 words.remove(word)
                 continue
+
+            word = self.cleanWord(word)
 
             #names
             if word in self.namesSet:
@@ -186,6 +187,10 @@ class WordFrequencies:
         split2 = split2 + split1 + 1
         return (int(date[:split1]), int(date[split1+1:split2]), int(date[split2+1:]))
 
+    def makeDate(self, dateStr):
+        date = self.splitDate(self.formatDate(dateStr))
+        return datetime(date[0], date[1], date[2])
+
     #returns date1 - date2 in date format
     def subtractDates(self, date1, date2): 
         split1 = self.splitDate(date1)
@@ -207,6 +212,22 @@ class WordFrequencies:
         print 'Length from first use to last: ' + str(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
         #print 'Percentage of days with a useage: ' + str()
+
+    def lookupLength(self, date):
+        print 'In lookupLength'
+        if date == 'avg':
+            print 'Average over all dates: ',
+            totalSum = 0
+            for d in self.wordCountOfEntriesDict:
+                totalSum += self.wordCountOfEntriesDict[d]
+            print float(totalSum) / len(self.wordCountOfEntriesDict),
+            print ' words per day'
+        else:
+            date = self.makeDate(date)
+            print date,
+            print ': ',
+            print self.wordCountOfEntriesDict[date],
+            print 'Word count: ',
 
     def printAll(self, names):
         self.printHighest(float('inf'), names)
@@ -253,11 +274,11 @@ class WordFrequencies:
     #print the x most occuring words
     #num: number to print. if 'all', prints all
     def printHighest(self, num_in, option):
-        if num_in == 'all':
-            num = len(self.namesDict)
-        else:
-            num = int(num_in)
+        #TODO: clean up the num all logic
+        num = int(num_in)
         if option == 'names':
+            if num_in == 'all':
+                num = len(self.namesDict)
             self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
             self.sortedNamesDict.reverse()
             if num > len(self.sortedNamesDict):
@@ -266,6 +287,8 @@ class WordFrequencies:
             for x in xrange(0,num):
                 self.makeOutputPretty(self.sortedNamesDict[x])
         elif option == 'wordsPerDay':
+            if num_in == 'all':
+                num = len(self.wordsPerDayDict)
             self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=operator.itemgetter(1))
             self.sortedWordsPerDayDict.reverse()
             if num > len(self.sortedWordsPerDayDict):
@@ -273,15 +296,17 @@ class WordFrequencies:
             for x in xrange(0,num):
                 self.makeOutputPretty(self.sortedWordsPerDayDict[x])
         elif option == 'namesPerDay':
+            if num_in == 'all':
+                num = len(self.namesPerDayDict)
             self.sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
             self.sortedNamesPerDayDict.reverse()
             if num > len(self.sortedNamesPerDayDict):
                 num = len(self.sortedNamesPerDayDict)
             for x in xrange(0,num):
                 self.makeOutputPretty(self.sortedNamesPerDayDict[x])
-        elif option == 'length':
-            self.
         else: #regular words
+            if num_in == 'all':
+                num = len(self.wordsDict)
             self.sortedWordsDict = sorted(self.wordsDict.items(), key=operator.itemgetter(1))
             self.sortedWordsDict.reverse()
             if num > len(self.sortedWordsDict):
@@ -290,6 +315,7 @@ class WordFrequencies:
                 self.makeOutputPretty(self.sortedWordsDict[x])
 
     #Put date into a format that can be recognized by datetime
+    #returns a string of the date in the proper format
     def formatDate(self, date_in):
         date = date_in.strip().lstrip();
 
@@ -320,9 +346,9 @@ class WordFrequencies:
             if res != None: #date found
                 self.wordCountOfEntriesDict[currentDate] = numWords
                 numWords = 0
-                currentDate = res.group(0);
-                currentDate = self.formatDate(currentDate)
+                currentDate = res.group(0)
                 line = line[len(currentDate):] #remove date from line, so it's not a word
+                currentDate = self.makeDate(currentDate)
 
             if currentDate != None:
                 numWords += self.addLine(line, currentDate)
@@ -347,7 +373,8 @@ class WordFrequencies:
         elif inp == 'addname':
             self.addName(arg)
         elif inp == 'length':
-            self.printHighest(arg, 'length')
+            print 'sending to lookupLength'
+            self.lookupLength(arg)
         else:
             pass
 
@@ -429,6 +456,8 @@ distinguish between different people with the same spelling of names
     possibly by looking at other people that are frequently mentioned with them in the same day to determine
 
 length of entries / average length of entries per day / look up or graph trends
+
+Add range for average for length
 
 analytics:
 
