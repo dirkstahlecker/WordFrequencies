@@ -86,10 +86,12 @@ class WordFrequencies:
     #parse a line and add the words to the dictionaries
     def addLine(self, line, currentDate):
         words = line.split(' ')
+
         for word in words:
             word = self.cleanWord(word)
 
             if not self.valid(word):
+                words.remove(word)
                 continue
 
             #names
@@ -277,6 +279,8 @@ class WordFrequencies:
                 num = len(self.sortedNamesPerDayDict)
             for x in xrange(0,num):
                 self.makeOutputPretty(self.sortedNamesPerDayDict[x])
+        elif option == 'length':
+            self.
         else: #regular words
             self.sortedWordsDict = sorted(self.wordsDict.items(), key=operator.itemgetter(1))
             self.sortedWordsDict.reverse()
@@ -304,14 +308,15 @@ class WordFrequencies:
             print('File not found')
             self.readFile(raw_input('Enter new path > ')) #TODO: not sure if this works
 
-        newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
+        newdateRegex = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
         currentDate = None;
         numWords = 0
         
         line = f.readline()
         while (line != ''):
+            line = line.strip().lstrip()
             #check a line to see if it's a date, therefore a new day
-            res = newdate.match(line)
+            res = newdateRegex.match(line)
             if res != None: #date found
                 self.wordCountOfEntriesDict[currentDate] = numWords
                 numWords = 0
@@ -323,14 +328,6 @@ class WordFrequencies:
                 numWords += self.addLine(line, currentDate)
                 self.guessNames(line)
             line = f.readline()
-        try:
-            print self.wordCountOfEntriesDict['01-01-17']
-            print self.wordCountOfEntriesDict['01-02-17']
-            print self.wordCountOfEntriesDict['01-03-17']
-            print self.wordCountOfEntriesDict['01-04-17']
-            print self.wordCountOfEntriesDict['01-05-17']
-        except:
-            pass
 
     def callInputFunction(self, inp, arg):
         if inp == 'highest':
@@ -349,6 +346,8 @@ class WordFrequencies:
             self.printHighest(arg, 'namesPerDay')
         elif inp == 'addname':
             self.addName(arg)
+        elif inp == 'length':
+            self.printHighest(arg, 'length')
         else:
             pass
 
@@ -379,6 +378,7 @@ class WordFrequencies:
             re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
             re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
             re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
+            re.compile('\s*length\s+(([0-9]{1,2}-[0-9]{2}-[0-9]{2})|avg)\s*', re.IGNORECASE): 'length',
             re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
             #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
             re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
@@ -393,6 +393,7 @@ class WordFrequencies:
     Lookup                      lookup [word]
     Highest x names             names [num | all]
     Highest x names per day     npd [num | all]
+    Entry length                length [date | avg ]
     Graph names                 graph [name]
     Graph names per day         gpd [name]
     Add name                    add name [name]
