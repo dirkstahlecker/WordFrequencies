@@ -5,6 +5,10 @@ import operator
 import argparse
 import matplotlib.pyplot as plt
 from datetime import datetime
+from datetime import timedelta
+
+def enum(**enums):
+    return type('Enum', (), enums)
 
 class WordFrequencies:
     namesSet = set()
@@ -187,9 +191,26 @@ class WordFrequencies:
         split2 = split2 + split1 + 1
         return (int(date[:split1]), int(date[split1+1:split2]), int(date[split2+1:]))
 
+    #TODO: need to append "20" to start of dates, to make them four digits for pretty printing to work
     def makeDate(self, dateStr):
         date = self.splitDate(self.formatDate(dateStr))
-        return datetime(date[0], date[1], date[2])
+        year = date[2]
+        #make the year four digits
+        if year < 100:
+            year += 2000
+        month = date[0]
+        day = date[1]
+        try:
+            return datetime(year=year, day=day, month=month) #goes year, month, day
+        except:
+            print 'ERROR in makeDate: '
+            print date,
+            print ' is invalid'
+            print date[2]
+            print date[1]
+            print date[0]
+            print type(date)
+            print type(date[2])
 
     #returns date1 - date2 in date format
     def subtractDates(self, date1, date2): 
@@ -213,21 +234,46 @@ class WordFrequencies:
         print 'Average usages per day: ' + str(float(total_uses) / length)
         #print 'Percentage of days with a useage: ' + str()
 
-    def lookupLength(self, date):
-        print 'In lookupLength'
-        if date == 'avg':
-            print 'Average over all dates: ',
-            totalSum = 0
-            for d in self.wordCountOfEntriesDict:
-                totalSum += self.wordCountOfEntriesDict[d]
-            print float(totalSum) / len(self.wordCountOfEntriesDict),
-            print ' words per day'
-        else:
+    def lookupLength(self, date, date2):
+        print 'date: ',
+        print date
+        print 'date2: ',
+        print date2
+        if date2 == None: #single word or total average
+            print 'lookupLength single word or total average'
+            if date == 'avg':
+                print 'Average over all dates: ',
+                totalSum = 0
+                for d in self.wordCountOfEntriesDict:
+                    totalSum += self.wordCountOfEntriesDict[d]
+                print round(float(totalSum) / len(self.wordCountOfEntriesDict), 2),
+                print ' words per day'
+            else:
+                date = self.makeDate(date)
+                print date.strftime("%A, %d. %B %Y")
+                print 'Word count: ',
+                print self.wordCountOfEntriesDict[date]
+        else: #date average range TODO: I don't think it gets into here
+            print 'lookupLength over range'
             date = self.makeDate(date)
-            print date,
-            print ': ',
-            print self.wordCountOfEntriesDict[date],
-            print 'Word count: ',
+            date2 = self.makeDate(date2)
+            totalSum = 0
+            numDays = 0
+            workingDate = date
+            while True:
+                try:
+                    totalSum += self.wordCountOfEntriesDict[workingDate]
+                    numDays += 1
+                except:
+                    pass
+                workingDate += timedelta(days=1)
+                if workingDate == date2:
+                    break
+            print date.strftime("%A, %d. %B %Y"),
+            print ' to ',
+            print date2.strftime("%A, %d. %B %Y")
+            print round(float(totalSum) / numDays, 2),
+            print ' words per day'
 
     def printAll(self, names):
         self.printHighest(float('inf'), names)
@@ -355,7 +401,8 @@ class WordFrequencies:
                 self.guessNames(line)
             line = f.readline()
 
-    def callInputFunction(self, inp, arg):
+    def callInputFunction(self, inp, matchGrp):
+        arg = matchGrp[0]
         if inp == 'highest':
             self.printHighest(arg, None)
         elif inp == 'lookup':
@@ -373,8 +420,12 @@ class WordFrequencies:
         elif inp == 'addname':
             self.addName(arg)
         elif inp == 'length':
-            print 'sending to lookupLength'
-            self.lookupLength(arg)
+            print 'single date or total average'
+            self.lookupLength(arg, None)
+        elif inp == 'length_range':
+            print 'average over range'
+            date2 = matchGrp[1]
+            self.lookupLength(arg, date2)
         else:
             pass
 
@@ -406,6 +457,7 @@ class WordFrequencies:
             re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
             re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
             re.compile('\s*length\s+(([0-9]{1,2}-[0-9]{2}-[0-9]{2})|avg)\s*', re.IGNORECASE): 'length',
+            re.compile('length\s+range\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})', re.IGNORECASE): 'length_range',
             re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
             #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
             re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
@@ -420,7 +472,7 @@ class WordFrequencies:
     Lookup                      lookup [word]
     Highest x names             names [num | all]
     Highest x names per day     npd [num | all]
-    Entry length                length [date | avg ]
+    Entry length                length [date | avg | range dateFrom dateTo]
     Graph names                 graph [name]
     Graph names per day         gpd [name]
     Add name                    add name [name]
@@ -432,9 +484,12 @@ class WordFrequencies:
                 if matches != None:
                     if regexDict[regex] == 'exit':
                         return
-                    self.callInputFunction(regexDict[regex], matches.groups(0)[0])
+                    self.callInputFunction(regexDict[regex], matches.groups(0))
 
 if __name__ == '__main__':
+    #Numbers = enum(ONE=1, TWO=2, THREE='three')
+    #use this as an enum, with Numbers.ONE, etc
+
     wf = WordFrequencies()
 
     parser = argparse.ArgumentParser()
@@ -456,6 +511,8 @@ distinguish between different people with the same spelling of names
     possibly by looking at other people that are frequently mentioned with them in the same day to determine
 
 length of entries / average length of entries per day / look up or graph trends
+
+use enums for all the arguments for the keywords for the different options - enum options utilized with the new enum class in the top
 
 Add range for average for length
 
