@@ -212,33 +212,25 @@ class WordFrequencies:
             print type(date)
             print type(date[2])
 
-    #returns date1 - date2 in date format
-    def subtractDates(self, date1, date2): 
-        split1 = self.splitDate(date1)
-        date1 = datetime(year=split1[2], day=split1[1], month=split1[0])
-
-        split2 = self.splitDate(date2)
-        date2 = datetime(year=split2[2], day=split2[1], month=split2[0])
-
-        diff = date1 - date2
-        return diff
-
     def lookupWord(self, word):
         print word + ': '
-        print 'First usage: ' + str(self.wordsDict[word][2])
-        print 'Last usage: ' + str(self.wordsDict[word][1])
-        total_uses = self.wordsDict[word][0]
-        print 'Total usages: ' + str(total_uses)
-        length = self.subtractDates(self.wordsDict[word][1], self.wordsDict[word][2]).days
-        print 'Length from first use to last: ' + str(length)
-        print 'Average usages per day: ' + str(float(total_uses) / length)
-        #print 'Percentage of days with a useage: ' + str()
+        try:
+            print 'First usage: ' + str(self.wordsDict[word][2])
+            print 'Last usage: ' + str(self.wordsDict[word][1])
+        except:
+            print 'No ocurrences found.'
+        try:
+            total_uses = self.wordsDict[word][0]
+            print 'Total usages: ' + str(total_uses)
+            length = (self.wordsDict[word][1] - self.wordsDict[word][2]).days
+            print 'Length from first use to last: ' + str(length)
+            #TODO: this assumes that every day from first use to last exists. need to divide by how many entries there actually are
+            print 'Average usages per day: ' + str(float(total_uses) / length)
+            #print 'Percentage of days with a useage: ' + str()
+        except:
+            print 'No ocurrences found.'
 
     def lookupLength(self, date, date2):
-        print 'date: ',
-        print date
-        print 'date2: ',
-        print date2
         if date2 == None: #single word or total average
             print 'lookupLength single word or total average'
             if date == 'avg':
@@ -253,8 +245,7 @@ class WordFrequencies:
                 print date.strftime("%A, %d. %B %Y")
                 print 'Word count: ',
                 print self.wordCountOfEntriesDict[date]
-        else: #date average range TODO: I don't think it gets into here
-            print 'lookupLength over range'
+        else: #date average range
             date = self.makeDate(date)
             date2 = self.makeDate(date2)
             totalSum = 0
@@ -423,7 +414,6 @@ class WordFrequencies:
             print 'single date or total average'
             self.lookupLength(arg, None)
         elif inp == 'length_range':
-            print 'average over range'
             date2 = matchGrp[1]
             self.lookupLength(arg, date2)
         else:
@@ -513,8 +503,6 @@ distinguish between different people with the same spelling of names
 length of entries / average length of entries per day / look up or graph trends
 
 use enums for all the arguments for the keywords for the different options - enum options utilized with the new enum class in the top
-
-Add range for average for length
 
 analytics:
 
