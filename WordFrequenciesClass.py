@@ -18,7 +18,7 @@ class WordFrequencies:
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
-    wordCountOfEntriesDict = {} #{ datetime : word count }
+    lengthOfEntriesDict = {} #{ datetime : word count }
     guessedNamesSet = set()
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     illegalCharacters = ['\\','{','}'] #characters that a word can't start with
@@ -212,6 +212,24 @@ class WordFrequencies:
             print type(date)
             print type(date[2])
 
+    def numEntriesAndLengthOfEntriedBetweenDates(self, date1, date2):
+        if (date1 > date2):
+            print 'date1 < date2'
+            return 0
+        totalSum = 0
+        numDays = 0
+        workingDate = date1
+        while True:
+            try:
+                totalSum += self.lengthOfEntriesDict[workingDate]
+                numDays += 1
+            except:
+                pass
+            workingDate += timedelta(days=1)
+            if workingDate >= date2:
+                break
+        return (numDays, totalSum)
+
     def lookupWord(self, word):
         print word + ': '
         try:
@@ -222,8 +240,13 @@ class WordFrequencies:
         try:
             total_uses = self.wordsDict[word][0]
             print 'Total usages: ' + str(total_uses)
-            length = (self.wordsDict[word][1] - self.wordsDict[word][2]).days
-            print 'Length from first use to last: ' + str(length)
+            #length = (self.wordsDict[word][1] - self.wordsDict[word][2]).days
+
+            startDate = self.wordsDict[word][2] #these are intentially backwards - 1 is last occurence, 2 is first occurence
+            endDate = self.wordsDict[word][1]
+            length = self.numEntriesAndLengthOfEntriedBetweenDates(startDate, endDate)[0]
+
+            print 'Length from first use to last: ' + str(length) + ' days'
             #TODO: this assumes that every day from first use to last exists. need to divide by how many entries there actually are
             print 'Average usages per day: ' + str(float(total_uses) / length)
             #print 'Percentage of days with a useage: ' + str()
@@ -232,39 +255,27 @@ class WordFrequencies:
 
     def lookupLength(self, date, date2):
         if date2 == None: #single word or total average
-            print 'lookupLength single word or total average'
             if date == 'avg':
                 print 'Average over all dates: ',
                 totalSum = 0
-                for d in self.wordCountOfEntriesDict:
-                    totalSum += self.wordCountOfEntriesDict[d]
-                print round(float(totalSum) / len(self.wordCountOfEntriesDict), 2),
+                for d in self.lengthOfEntriesDict:
+                    totalSum += self.lengthOfEntriesDict[d]
+                print round(float(totalSum) / len(self.lengthOfEntriesDict), 2),
                 print ' words per day'
             else:
                 date = self.makeDate(date)
                 print date.strftime("%A, %d. %B %Y")
                 print 'Word count: ',
-                print self.wordCountOfEntriesDict[date]
+                print self.lengthOfEntriesDict[date]
         else: #date average range
             date = self.makeDate(date)
             date2 = self.makeDate(date2)
-            totalSum = 0
-            numDays = 0
-            workingDate = date
-            while True:
-                try:
-                    totalSum += self.wordCountOfEntriesDict[workingDate]
-                    numDays += 1
-                except:
-                    pass
-                workingDate += timedelta(days=1)
-                if workingDate == date2:
-                    break
+            totalSum = self.numEntriesAndLengthOfEntriedBetweenDates(date, date2)[1]
             print date.strftime("%A, %d. %B %Y"),
             print ' to ',
             print date2.strftime("%A, %d. %B %Y")
-            print round(float(totalSum) / numDays, 2),
-            print ' words per day'
+            print round(float(totalSum) / totalSum, 2), #TODO: this line is wrong
+            print ' average words per day'
 
     def printAll(self, names):
         self.printHighest(float('inf'), names)
@@ -381,7 +392,7 @@ class WordFrequencies:
             #check a line to see if it's a date, therefore a new day
             res = newdateRegex.match(line)
             if res != None: #date found
-                self.wordCountOfEntriesDict[currentDate] = numWords
+                self.lengthOfEntriesDict[currentDate] = numWords
                 numWords = 0
                 currentDate = res.group(0)
                 line = line[len(currentDate):] #remove date from line, so it's not a word
@@ -416,6 +427,8 @@ class WordFrequencies:
         elif inp == 'length_range':
             date2 = matchGrp[1]
             self.lookupLength(arg, date2)
+        elif inp == 'guess_names':
+            #TODO
         else:
             pass
 
@@ -437,8 +450,7 @@ class WordFrequencies:
     def main(self, fileurl):
         self.makeNamesSet()
         self.readFile(fileurl)
-        
-        legalWordParts = '[^{}]'
+
         #TODO: there's a better way to do this I'm sure
         regexDict = {
             re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
@@ -450,7 +462,8 @@ class WordFrequencies:
             re.compile('length\s+range\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})', re.IGNORECASE): 'length_range',
             re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
             #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
-            re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
+            re.compile('\s*add\s+name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
+            re.compile('\s*guess\s+names\s+([^{}]+)\s*', re.IGNORECASE): 'guess_names',
             re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
         }
         
@@ -494,15 +507,14 @@ if __name__ == '__main__':
 
 '''
 TODO: 
-something weird going on with apostrophes (specifically "didn't")
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
 
 distinguish between different people with the same spelling of names
     possibly by looking at other people that are frequently mentioned with them in the same day to determine
 
-length of entries / average length of entries per day / look up or graph trends
-
 use enums for all the arguments for the keywords for the different options - enum options utilized with the new enum class in the top
+
+error handling for incorrect arguments
 
 analytics:
 

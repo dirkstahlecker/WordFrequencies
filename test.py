@@ -12,12 +12,11 @@ class TestUM(unittest.TestCase):
 
  
     def test_namesURL(self):
-        #self.assertEqual(self.wf.namesURL, "/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/names.txt")
-        pass
+        self.assertEqual(self.wf.namesURL, "/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/names.txt")
 
     def test_journalParsing(self):
-        self.assertEqual(len(self.wf.wordCountOfEntriesDict), 5)
-        self.assertEqual(self.wf.wordCountOfEntriesDict['01-05-17'], 11)
+        #self.assertEqual(len(self.wf.wordCountOfEntriesDict), 5)
+        #self.assertEqual(self.wf.wordCountOfEntriesDict['01-05-17'], 11)
         #self.assertEqual(len(self.wf.wordsDict), 10)
         #self.assertEqual(len(self.wf.namesDict), 0)
         #self.assertEqual(self.wf.wordsDict[1], "one")
@@ -25,3 +24,6 @@ class TestUM(unittest.TestCase):
  
 if __name__ == '__main__':
     unittest.main()
+
+
+#look into pexpect library for automation
