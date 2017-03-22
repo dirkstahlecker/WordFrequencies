@@ -6,6 +6,7 @@ import argparse
 import matplotlib.pyplot as plt
 from datetime import datetime
 from datetime import timedelta
+import sys
 
 def enum(**enums):
     return type('Enum', (), enums)
@@ -18,16 +19,41 @@ class WordFrequencies:
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
-    lengthOfEntriesDict = {} #{ datetime : word count }
+    lengthOfEntriesDict = { } #{ datetime : word count }
     guessedNamesSet = set()
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     illegalCharacters = ['\\','{','}'] #characters that a word can't start with
+    commonWords = set() #TODO: set this
+    regexDict = {}
 
     WORD_COL_WIDTH = 20
     NUM_COL_WIDTH = 6
     DATE_COL_WIDTH = 8
 
     debug = False
+
+    #constructor to initialize the various variables
+    def __init__(self):
+        self.makeNamesSet()
+        self.setCommonWords()
+        self.readFile(fileurl)
+
+        #TODO: there's a better way to do this I'm sure
+        self.regexDict = {
+            re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
+            re.compile('\s*highest\s+-hide-common\s+([\d]+|all)\s*', re.IGNORECASE): 'highest_hide_common',
+            re.compile('\s*wpd\s+([\d]+|all)\s*', re.IGNORECASE): 'wpd',
+            re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
+            re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
+            re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
+            re.compile('\s*length\s+(([0-9]{1,2}-[0-9]{2}-[0-9]{2})|avg)\s*', re.IGNORECASE): 'length',
+            re.compile('length\s+range\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})', re.IGNORECASE): 'length_range',
+            re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
+            #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
+            re.compile('\s*add\s+name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
+            re.compile('\s*guess\s+names\s+([^{}]+)\s*', re.IGNORECASE): 'guess_names',
+            re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
+        }
 
 
     #try to guess what is a name by looking for capitalized letters in the middle of sentences
@@ -352,6 +378,18 @@ class WordFrequencies:
                 num = len(self.sortedNamesPerDayDict)
             for x in xrange(0,num):
                 self.makeOutputPretty(self.sortedNamesPerDayDict[x])
+        elif option == 'highest_hide_common':
+            if num_in == 'all':
+                num = len(self.namesDict)
+            self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
+            self.sortedNamesDict.reverse()
+            if num > len(self.sortedNamesDict):
+                num = len(self.sortedNamesDict)
+            self.makePrettyHeader()
+            for x in xrange(0,num):
+                if self.sortedNamesDict[x] in self.commonWords:
+                    continue
+                self.makeOutputPretty(self.sortedNamesDict[x])
         else: #regular words
             if num_in == 'all':
                 num = len(self.wordsDict)
@@ -407,6 +445,8 @@ class WordFrequencies:
         arg = matchGrp[0]
         if inp == 'highest':
             self.printHighest(arg, None)
+        if inp == 'highest_hide_common':
+            self.printHighest(arg, None)
         elif inp == 'lookup':
             self.lookupWord(arg)
         elif inp == 'names':
@@ -429,6 +469,7 @@ class WordFrequencies:
             self.lookupLength(arg, date2)
         elif inp == 'guess_names':
             #TODO
+            pass
         else:
             pass
 
@@ -447,30 +488,26 @@ class WordFrequencies:
             self.namesSet.add(line.strip().lower())
             line = f.readline()
 
-    def main(self, fileurl):
-        self.makeNamesSet()
-        self.readFile(fileurl)
+    #called on setup to initialize the common words set
+    def setCommonWords(self):
+        self.commonWords.add('i', 'a', 'and', 'by', 'the', 'me', 'you', 'he', 'she', 'him', 'her', 'they', 'them', 'be', 'to', 'of', 'in', 'that', 'have',
+            'it', 'for', 'not', 'on', 'with', 'as', 'do', 'at', 'this', 'but', 'by', 'from', 'we', 'say', 'her', 'or', 'an', 'will', 'one', 'all', 'would',
+            'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 
+            'know', 'take', 'people', 'person', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look',
+            'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new',
+            'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us');
+        #TODO: maybe use a percentage of total words here or something as a threshold
 
-        #TODO: there's a better way to do this I'm sure
-        regexDict = {
-            re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
-            re.compile('\s*wpd\s+([\d]+|all)\s*', re.IGNORECASE): 'wpd',
-            re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
-            re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
-            re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
-            re.compile('\s*length\s+(([0-9]{1,2}-[0-9]{2}-[0-9]{2})|avg)\s*', re.IGNORECASE): 'length',
-            re.compile('length\s+range\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})', re.IGNORECASE): 'length_range',
-            re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
-            #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
-            re.compile('\s*add\s+name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
-            re.compile('\s*guess\s+names\s+([^{}]+)\s*', re.IGNORECASE): 'guess_names',
-            re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
-        }
-        
+    #main called by the web API, utilizing network commands 
+    def main_web(self):
+        print 'in main_web'
+
+    #main called by the normal command line run, utilizing raw_input for user commands
+    def main(self, fileurl):
         while True:
             print '''
     Options:
-    Highest x words             highest [num | all]
+    Highest x words             highest [num | all] ( -hide-common )
     Highest x words per day     wpd [num | all]
     Lookup                      lookup [word]
     Highest x names             names [num | all]
@@ -489,11 +526,11 @@ class WordFrequencies:
                         return
                     self.callInputFunction(regexDict[regex], matches.groups(0))
 
+wf = WordFrequencies()
+
 if __name__ == '__main__':
     #Numbers = enum(ONE=1, TWO=2, THREE='three')
     #use this as an enum, with Numbers.ONE, etc
-
-    wf = WordFrequencies()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="Path to file to examine")
@@ -502,6 +539,9 @@ if __name__ == '__main__':
 
     wf.main(args.file)
 
+
+if sys.argv[1] != '':
+    main_web()
 
 
 
