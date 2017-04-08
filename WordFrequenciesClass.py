@@ -35,7 +35,7 @@ class WordFrequencies:
     #constructor to initialize the various variables
     def __init__(self):
         self.makeNamesSet()
-        self.setCommonWords()
+        #self.setCommonWords()
         self.readFile(fileurl)
 
         #TODO: there's a better way to do this I'm sure
@@ -473,6 +473,36 @@ class WordFrequencies:
         else:
             pass
 
+    def callInputFunction2(self, parts):
+        cmd = parts[0]
+        arg = parts[1]
+        try: #wrap everything in a try, and if it throws, it's not a valid command
+            if cmd == 'highest':
+                self.printHighest(arg, None)
+            if cmd == 'highest_hide_common':
+                pass
+            if cmd == 'lookup':
+                self.lookupWord(arg)
+            if cmd == 'names':
+                pass
+            if cmd == 'graph':
+                pass
+            if cmd == 'gpd':
+                pass
+            if cmd == 'wpd':
+                pass
+            if cmd == 'npd':
+                pass
+            if cmd == 'npd':
+                pass
+            if cmd == 'npd':
+                pass
+            if cmd == 'npd':
+                pass
+        except:
+            pass
+
+
     def enableVerbosity(self):
         verbose = True;
 
@@ -488,6 +518,7 @@ class WordFrequencies:
             self.namesSet.add(line.strip().lower())
             line = f.readline()
 
+    '''
     #called on setup to initialize the common words set
     def setCommonWords(self):
         self.commonWords.add('i', 'a', 'and', 'by', 'the', 'me', 'you', 'he', 'she', 'him', 'her', 'they', 'them', 'be', 'to', 'of', 'in', 'that', 'have',
@@ -497,10 +528,7 @@ class WordFrequencies:
             'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new',
             'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us');
         #TODO: maybe use a percentage of total words here or something as a threshold
-
-    #main called by the web API, utilizing network commands 
-    def main_web(self):
-        print 'in main_web'
+    '''
 
     #main called by the normal command line run, utilizing raw_input for user commands
     def main(self, fileurl):
@@ -519,29 +547,32 @@ class WordFrequencies:
     Exit                        exit
     '''
             inp = raw_input('>')
+            parts = inp.split(' ')
+            if parts[0].strip().lstrip() == 'exit':
+                return
+            #self.callInputFunction2(parts)
+
+
+            
             for regex in regexDict.keys():
                 matches = regex.match(inp)
                 if matches != None:
                     if regexDict[regex] == 'exit':
                         return
                     self.callInputFunction(regexDict[regex], matches.groups(0))
-
-wf = WordFrequencies()
-
+            
 if __name__ == '__main__':
     #Numbers = enum(ONE=1, TWO=2, THREE='three')
     #use this as an enum, with Numbers.ONE, etc
+    wf = WordFrequencies()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="Path to file to examine")
     #parser.add_argument('-v', '--verbose', help="Enable verbose output", action="enableVerbosity()")
     args = parser.parse_args()
+    
 
     wf.main(args.file)
-
-
-if sys.argv[1] != '':
-    main_web()
 
 
 
@@ -555,6 +586,8 @@ distinguish between different people with the same spelling of names
 use enums for all the arguments for the keywords for the different options - enum options utilized with the new enum class in the top
 
 error handling for incorrect arguments
+
+maybe hook names into other things (gmail, sms, )
 
 analytics:
 
