@@ -5,6 +5,7 @@ import operator
 import argparse
 import matplotlib.pyplot as plt
 from datetime import datetime
+from Helper import Helper
 
 class WordFrequencies:
     namesSet = set()
@@ -76,18 +77,11 @@ class WordFrequencies:
             return False
         return True
 
-    def cleanWord(self, word):
-        word = word.strip().lstrip().lower();
-        regex = re.compile('([\w|-|\']*)')
-        match = regex.match(word)
-        word = match.group(0)
-        return word
-
     #parse a line and add the words to the dictionaries
     def addLine(self, line, currentDate):
         words = line.split(' ')
         for word in words:
-            word = self.cleanWord(word)
+            word = Helper.cleanWord(word)
 
             if not self.valid(word):
                 continue
@@ -177,31 +171,14 @@ class WordFrequencies:
             except:
                 print 'Word not found'
 
-    def splitDate(self, date):
-        split1 = date.find('-')
-        split2 = date.find('-',split1)
-        split2 = split2 + split1 + 1
-        return (int(date[:split1]), int(date[split1+1:split2]), int(date[split2+1:]))
-
-    #returns date1 - date2 in date format
-    def subtractDates(self, date1, date2): 
-        split1 = self.splitDate(date1)
-        date1 = datetime(year=split1[2], day=split1[1], month=split1[0])
-
-        split2 = self.splitDate(date2)
-        date2 = datetime(year=split2[2], day=split2[1], month=split2[0])
-
-        diff = date1 - date2
-        return diff
-
     def lookupWord(self, word):
         print word + ': '
         print 'First usage: ' + str(self.wordsDict[word][2])
         print 'Last usage: ' + str(self.wordsDict[word][1])
         total_uses = self.wordsDict[word][0]
         print 'Total usages: ' + str(total_uses)
-        length = self.subtractDates(self.wordsDict[word][1], self.wordsDict[word][2]).days
-        print 'Length from first use to last: ' + str(length)
+        length = Helper.subtractDates(self.wordsDict[word][1], self.wordsDict[word][2]).days
+        print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
         #print 'Percentage of days with a useage: ' + str()
 
@@ -349,7 +326,7 @@ class WordFrequencies:
         elif inp == 'addname':
             self.addName(arg)
         else:
-            pass
+            print 'Unknown command.'
 
     def enableVerbosity(self):
         verbose = True;
@@ -425,5 +402,12 @@ make names sensitive to capitals (ex. "will" is very high, because of the everyd
 distinguish between different people with the same spelling of names
     possibly by looking at other people that are frequently mentioned with them in the same day to determine
 length of entries / average length of entries per day / look up or graph trends
+
+all doesn't work as keyword
+
+
+replace data structures with something more readable and maintainable (some sort of named nested tree maybe)
+
+
 analytics:
 '''
