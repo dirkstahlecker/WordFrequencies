@@ -5,11 +5,6 @@ import operator
 import argparse
 import matplotlib.pyplot as plt
 from datetime import datetime
-from datetime import timedelta
-import sys
-
-def enum(**enums):
-    return type('Enum', (), enums)
 
 class WordFrequencies:
     namesSet = set()
@@ -19,41 +14,16 @@ class WordFrequencies:
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
-    lengthOfEntriesDict = { } #{ datetime : word count }
+    wordCountOfEntriesDict = {} #{ date : word count }
     guessedNamesSet = set()
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     illegalCharacters = ['\\','{','}'] #characters that a word can't start with
-    commonWords = set() #TODO: set this
-    regexDict = {}
 
     WORD_COL_WIDTH = 20
     NUM_COL_WIDTH = 6
     DATE_COL_WIDTH = 8
 
     debug = False
-
-    #constructor to initialize the various variables
-    def __init__(self):
-        self.makeNamesSet()
-        #self.setCommonWords()
-        self.readFile(fileurl)
-
-        #TODO: there's a better way to do this I'm sure
-        self.regexDict = {
-            re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
-            re.compile('\s*highest\s+-hide-common\s+([\d]+|all)\s*', re.IGNORECASE): 'highest_hide_common',
-            re.compile('\s*wpd\s+([\d]+|all)\s*', re.IGNORECASE): 'wpd',
-            re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
-            re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
-            re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
-            re.compile('\s*length\s+(([0-9]{1,2}-[0-9]{2}-[0-9]{2})|avg)\s*', re.IGNORECASE): 'length',
-            re.compile('length\s+range\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})\s+([0-9]{1,2}-[0-9]{2}-[0-9]{2})', re.IGNORECASE): 'length_range',
-            re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
-            #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
-            re.compile('\s*add\s+name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
-            re.compile('\s*guess\s+names\s+([^{}]+)\s*', re.IGNORECASE): 'guess_names',
-            re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
-        }
 
 
     #try to guess what is a name by looking for capitalized letters in the middle of sentences
@@ -100,7 +70,6 @@ class WordFrequencies:
         f.close()
 
     def valid(self, word):
-        word = self.cleanWord(word)
         if len(word) == 0:
             return False;
         if word[0] in self.illegalCharacters:
@@ -117,13 +86,11 @@ class WordFrequencies:
     #parse a line and add the words to the dictionaries
     def addLine(self, line, currentDate):
         words = line.split(' ')
-
         for word in words:
-            if not self.valid(word):
-                words.remove(word)
-                continue
-
             word = self.cleanWord(word)
+
+            if not self.valid(word):
+                continue
 
             #names
             if word in self.namesSet:
@@ -197,7 +164,6 @@ class WordFrequencies:
             ax.set_xlabel('Date')
             ax.set_ylabel('')
             ax.xaxis_date()
-
             plt.show()
         except:
             print 'Illegal input - must be a valid name'
@@ -217,91 +183,27 @@ class WordFrequencies:
         split2 = split2 + split1 + 1
         return (int(date[:split1]), int(date[split1+1:split2]), int(date[split2+1:]))
 
-    #TODO: need to append "20" to start of dates, to make them four digits for pretty printing to work
-    def makeDate(self, dateStr):
-        date = self.splitDate(self.formatDate(dateStr))
-        year = date[2]
-        #make the year four digits
-        if year < 100:
-            year += 2000
-        month = date[0]
-        day = date[1]
-        try:
-            return datetime(year=year, day=day, month=month) #goes year, month, day
-        except:
-            print 'ERROR in makeDate: '
-            print date,
-            print ' is invalid'
-            print date[2]
-            print date[1]
-            print date[0]
-            print type(date)
-            print type(date[2])
+    #returns date1 - date2 in date format
+    def subtractDates(self, date1, date2): 
+        split1 = self.splitDate(date1)
+        date1 = datetime(year=split1[2], day=split1[1], month=split1[0])
 
-    def numEntriesAndLengthOfEntriedBetweenDates(self, date1, date2):
-        if (date1 > date2):
-            print 'date1 < date2'
-            return 0
-        totalSum = 0
-        numDays = 0
-        workingDate = date1
-        while True:
-            try:
-                totalSum += self.lengthOfEntriesDict[workingDate]
-                numDays += 1
-            except:
-                pass
-            workingDate += timedelta(days=1)
-            if workingDate >= date2:
-                break
-        return (numDays, totalSum)
+        split2 = self.splitDate(date2)
+        date2 = datetime(year=split2[2], day=split2[1], month=split2[0])
+
+        diff = date1 - date2
+        return diff
 
     def lookupWord(self, word):
         print word + ': '
-        try:
-            print 'First usage: ' + str(self.wordsDict[word][2])
-            print 'Last usage: ' + str(self.wordsDict[word][1])
-        except:
-            print 'No ocurrences found.'
-        try:
-            total_uses = self.wordsDict[word][0]
-            print 'Total usages: ' + str(total_uses)
-            #length = (self.wordsDict[word][1] - self.wordsDict[word][2]).days
-
-            startDate = self.wordsDict[word][2] #these are intentially backwards - 1 is last occurence, 2 is first occurence
-            endDate = self.wordsDict[word][1]
-            length = self.numEntriesAndLengthOfEntriedBetweenDates(startDate, endDate)[0]
-
-            print 'Length from first use to last: ' + str(length) + ' days'
-            #TODO: this assumes that every day from first use to last exists. need to divide by how many entries there actually are
-            print 'Average usages per day: ' + str(float(total_uses) / length)
-            #print 'Percentage of days with a useage: ' + str()
-        except:
-            print 'No ocurrences found.'
-
-    def lookupLength(self, date, date2):
-        if date2 == None: #single word or total average
-            if date == 'avg':
-                print 'Average over all dates: ',
-                totalSum = 0
-                for d in self.lengthOfEntriesDict:
-                    totalSum += self.lengthOfEntriesDict[d]
-                print round(float(totalSum) / len(self.lengthOfEntriesDict), 2),
-                print ' words per day'
-            else:
-                date = self.makeDate(date)
-                print date.strftime("%A, %d. %B %Y")
-                print 'Word count: ',
-                print self.lengthOfEntriesDict[date]
-        else: #date average range
-            date = self.makeDate(date)
-            date2 = self.makeDate(date2)
-            totalSum = self.numEntriesAndLengthOfEntriedBetweenDates(date, date2)[1]
-            print date.strftime("%A, %d. %B %Y"),
-            print ' to ',
-            print date2.strftime("%A, %d. %B %Y")
-            print round(float(totalSum) / totalSum, 2), #TODO: this line is wrong
-            print ' average words per day'
+        print 'First usage: ' + str(self.wordsDict[word][2])
+        print 'Last usage: ' + str(self.wordsDict[word][1])
+        total_uses = self.wordsDict[word][0]
+        print 'Total usages: ' + str(total_uses)
+        length = self.subtractDates(self.wordsDict[word][1], self.wordsDict[word][2]).days
+        print 'Length from first use to last: ' + str(length)
+        print 'Average usages per day: ' + str(float(total_uses) / length)
+        #print 'Percentage of days with a useage: ' + str()
 
     def printAll(self, names):
         self.printHighest(float('inf'), names)
@@ -348,11 +250,11 @@ class WordFrequencies:
     #print the x most occuring words
     #num: number to print. if 'all', prints all
     def printHighest(self, num_in, option):
-        #TODO: clean up the num all logic
-        num = int(num_in)
+        if num_in == 'all':
+            num = len(self.namesDict)
+        else:
+            num = int(num_in)
         if option == 'names':
-            if num_in == 'all':
-                num = len(self.namesDict)
             self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
             self.sortedNamesDict.reverse()
             if num > len(self.sortedNamesDict):
@@ -361,8 +263,6 @@ class WordFrequencies:
             for x in xrange(0,num):
                 self.makeOutputPretty(self.sortedNamesDict[x])
         elif option == 'wordsPerDay':
-            if num_in == 'all':
-                num = len(self.wordsPerDayDict)
             self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=operator.itemgetter(1))
             self.sortedWordsPerDayDict.reverse()
             if num > len(self.sortedWordsPerDayDict):
@@ -370,29 +270,13 @@ class WordFrequencies:
             for x in xrange(0,num):
                 self.makeOutputPretty(self.sortedWordsPerDayDict[x])
         elif option == 'namesPerDay':
-            if num_in == 'all':
-                num = len(self.namesPerDayDict)
             self.sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
             self.sortedNamesPerDayDict.reverse()
             if num > len(self.sortedNamesPerDayDict):
                 num = len(self.sortedNamesPerDayDict)
             for x in xrange(0,num):
                 self.makeOutputPretty(self.sortedNamesPerDayDict[x])
-        elif option == 'highest_hide_common':
-            if num_in == 'all':
-                num = len(self.namesDict)
-            self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
-            self.sortedNamesDict.reverse()
-            if num > len(self.sortedNamesDict):
-                num = len(self.sortedNamesDict)
-            self.makePrettyHeader()
-            for x in xrange(0,num):
-                if self.sortedNamesDict[x] in self.commonWords:
-                    continue
-                self.makeOutputPretty(self.sortedNamesDict[x])
         else: #regular words
-            if num_in == 'all':
-                num = len(self.wordsDict)
             self.sortedWordsDict = sorted(self.wordsDict.items(), key=operator.itemgetter(1))
             self.sortedWordsDict.reverse()
             if num > len(self.sortedWordsDict):
@@ -401,7 +285,6 @@ class WordFrequencies:
                 self.makeOutputPretty(self.sortedWordsDict[x])
 
     #Put date into a format that can be recognized by datetime
-    #returns a string of the date in the proper format
     def formatDate(self, date_in):
         date = date_in.strip().lstrip();
 
@@ -420,32 +303,36 @@ class WordFrequencies:
             print('File not found')
             self.readFile(raw_input('Enter new path > ')) #TODO: not sure if this works
 
-        newdateRegex = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
+        newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
         currentDate = None;
         numWords = 0
         
         line = f.readline()
         while (line != ''):
-            line = line.strip().lstrip()
             #check a line to see if it's a date, therefore a new day
-            res = newdateRegex.match(line)
+            res = newdate.match(line)
             if res != None: #date found
-                self.lengthOfEntriesDict[currentDate] = numWords
+                self.wordCountOfEntriesDict[currentDate] = numWords
                 numWords = 0
-                currentDate = res.group(0)
+                currentDate = res.group(0);
+                currentDate = self.formatDate(currentDate)
                 line = line[len(currentDate):] #remove date from line, so it's not a word
-                currentDate = self.makeDate(currentDate)
 
             if currentDate != None:
                 numWords += self.addLine(line, currentDate)
                 self.guessNames(line)
             line = f.readline()
+        try:
+            print self.wordCountOfEntriesDict['01-01-17']
+            print self.wordCountOfEntriesDict['01-02-17']
+            print self.wordCountOfEntriesDict['01-03-17']
+            print self.wordCountOfEntriesDict['01-04-17']
+            print self.wordCountOfEntriesDict['01-05-17']
+        except:
+            pass
 
-    def callInputFunction(self, inp, matchGrp):
-        arg = matchGrp[0]
+    def callInputFunction(self, inp, arg):
         if inp == 'highest':
-            self.printHighest(arg, None)
-        if inp == 'highest_hide_common':
             self.printHighest(arg, None)
         elif inp == 'lookup':
             self.lookupWord(arg)
@@ -461,47 +348,8 @@ class WordFrequencies:
             self.printHighest(arg, 'namesPerDay')
         elif inp == 'addname':
             self.addName(arg)
-        elif inp == 'length':
-            print 'single date or total average'
-            self.lookupLength(arg, None)
-        elif inp == 'length_range':
-            date2 = matchGrp[1]
-            self.lookupLength(arg, date2)
-        elif inp == 'guess_names':
-            #TODO
-            pass
         else:
             pass
-
-    def callInputFunction2(self, parts):
-        cmd = parts[0]
-        arg = parts[1]
-        try: #wrap everything in a try, and if it throws, it's not a valid command
-            if cmd == 'highest':
-                self.printHighest(arg, None)
-            if cmd == 'highest_hide_common':
-                pass
-            if cmd == 'lookup':
-                self.lookupWord(arg)
-            if cmd == 'names':
-                pass
-            if cmd == 'graph':
-                pass
-            if cmd == 'gpd':
-                pass
-            if cmd == 'wpd':
-                pass
-            if cmd == 'npd':
-                pass
-            if cmd == 'npd':
-                pass
-            if cmd == 'npd':
-                pass
-            if cmd == 'npd':
-                pass
-        except:
-            pass
-
 
     def enableVerbosity(self):
         verbose = True;
@@ -518,77 +366,64 @@ class WordFrequencies:
             self.namesSet.add(line.strip().lower())
             line = f.readline()
 
-    '''
-    #called on setup to initialize the common words set
-    def setCommonWords(self):
-        self.commonWords.add('i', 'a', 'and', 'by', 'the', 'me', 'you', 'he', 'she', 'him', 'her', 'they', 'them', 'be', 'to', 'of', 'in', 'that', 'have',
-            'it', 'for', 'not', 'on', 'with', 'as', 'do', 'at', 'this', 'but', 'by', 'from', 'we', 'say', 'her', 'or', 'an', 'will', 'one', 'all', 'would',
-            'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 
-            'know', 'take', 'people', 'person', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look',
-            'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new',
-            'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us');
-        #TODO: maybe use a percentage of total words here or something as a threshold
-    '''
-
-    #main called by the normal command line run, utilizing raw_input for user commands
     def main(self, fileurl):
+        self.makeNamesSet()
+        self.readFile(fileurl)
+        
+        legalWordParts = '[^{}]'
+        #TODO: there's a better way to do this I'm sure
+        regexDict = {
+            re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
+            re.compile('\s*wpd\s+([\d]+|all)\s*', re.IGNORECASE): 'wpd',
+            re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
+            re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
+            re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
+            re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
+            #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
+            re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
+            re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
+        }
+        
         while True:
             print '''
     Options:
-    Highest x words             highest [num | all] ( -hide-common )
+    Highest x words             highest [num | all]
     Highest x words per day     wpd [num | all]
     Lookup                      lookup [word]
     Highest x names             names [num | all]
     Highest x names per day     npd [num | all]
-    Entry length                length [date | avg | range dateFrom dateTo]
     Graph names                 graph [name]
     Graph names per day         gpd [name]
     Add name                    add name [name]
     Exit                        exit
     '''
             inp = raw_input('>')
-            parts = inp.split(' ')
-            if parts[0].strip().lstrip() == 'exit':
-                return
-            #self.callInputFunction2(parts)
-
-
-            
             for regex in regexDict.keys():
                 matches = regex.match(inp)
                 if matches != None:
                     if regexDict[regex] == 'exit':
                         return
-                    self.callInputFunction(regexDict[regex], matches.groups(0))
-            
+                    self.callInputFunction(regexDict[regex], matches.groups(0)[0])
+
 if __name__ == '__main__':
-    #Numbers = enum(ONE=1, TWO=2, THREE='three')
-    #use this as an enum, with Numbers.ONE, etc
     wf = WordFrequencies()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="Path to file to examine")
     #parser.add_argument('-v', '--verbose', help="Enable verbose output", action="enableVerbosity()")
     args = parser.parse_args()
-    
 
     wf.main(args.file)
 
 
 
+
 '''
 TODO: 
+something weird going on with apostrophes (specifically "didn't")
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
-
 distinguish between different people with the same spelling of names
     possibly by looking at other people that are frequently mentioned with them in the same day to determine
-
-use enums for all the arguments for the keywords for the different options - enum options utilized with the new enum class in the top
-
-error handling for incorrect arguments
-
-maybe hook names into other things (gmail, sms, )
-
+length of entries / average length of entries per day / look up or graph trends
 analytics:
-
 '''
