@@ -6,6 +6,7 @@ import argparse
 import matplotlib.pyplot as plt
 from datetime import datetime
 from Helper import Helper
+from Preferences import Preferences
 
 class WordFrequencies:
     namesSet = set()
@@ -19,13 +20,11 @@ class WordFrequencies:
     guessedNamesSet = set()
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     illegalCharacters = ['\\','{','}'] #characters that a word can't start with
+    prefs = Preferences() #stored the user's preferences for various things
 
     WORD_COL_WIDTH = 20
     NUM_COL_WIDTH = 6
     DATE_COL_WIDTH = 8
-
-    debug = False
-
 
     #try to guess what is a name by looking for capitalized letters in the middle of sentences
     def getGuessedNames(self):
@@ -407,6 +406,10 @@ all doesn't work as keyword
 
 
 replace data structures with something more readable and maintainable (some sort of named nested tree maybe)
+
+hold whether the first letter was a capital letter in the data structure
+
+flag to ignore trailing s and then combine both "word" and "words" into same 
 
 
 analytics:
