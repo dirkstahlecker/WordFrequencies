@@ -12,7 +12,7 @@ class WordFrequencies:
     namesSet = set()
     wordsDict = {} #{ word : ( count , last occurence , first occurence ) }
     namesDict = {} #{ name : ( count , last occurence ) }
-    wordsPerDayDict = {} #{ word : ( count , last occurence ) } only counts one occurence per day
+    wordsPerDayDict = {} #{ word : { 'count': count , 'lastOccurence': last occurence } } only counts one occurence per day
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
@@ -123,10 +123,10 @@ class WordFrequencies:
             
             #words per day
             try:
-                if self.wordsPerDayDict[word][1] != currentDate:
-                    self.wordsPerDayDict[word] = (self.wordsPerDayDict[word][0] + 1, currentDate)
+                if self.wordsPerDayDict[word]['lastOccurence'] != currentDate:
+                    self.wordsPerDayDict[word] = {'count': self.wordsPerDayDict[word]['count'] + 1, 'lastOccurence': currentDate}
             except:
-                    self.wordsPerDayDict[word] = (1, currentDate)
+                    self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
 
         return len(words)
 
@@ -220,6 +220,13 @@ class WordFrequencies:
         date = inp[1][1]
         self.makeOutputPrettyHelper(False, word, count, date)
 
+    #inp comes in as a tuple due to the sorting and the fact that dicts can't be sorted
+    def makeOutputPrettyWPD(self, inp): #( word : { 'count': count, 'lastOccurence': last occurence } )
+        word = inp[0]
+        count = inp[1]['count']
+        date = inp[1]['lastOccurence']
+        self.makeOutputPrettyHelper(False, word, count, date)
+
     def makePrettyHeader(self):
         self.makeOutputPrettyHelper(True, '', '', '')
         
@@ -227,7 +234,7 @@ class WordFrequencies:
     #num: number to print. if 'all', prints all
     def printHighest(self, num_in, option):
         if num_in == 'all':
-            num = len(self.namesDict)
+            num = float('inf') #TODO: test this with all cases
         else:
             num = int(num_in)
         if option == 'names':
@@ -236,28 +243,28 @@ class WordFrequencies:
             if num > len(self.sortedNamesDict):
                 num = len(self.sortedNamesDict)
             self.makePrettyHeader()
-            for x in xrange(0,num):
+            for x in xrange(0, min(num, len(self.sortedNamesDict))):
                 self.makeOutputPretty(self.sortedNamesDict[x])
         elif option == 'wordsPerDay':
-            self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=operator.itemgetter(1))
+            self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
             self.sortedWordsPerDayDict.reverse()
             if num > len(self.sortedWordsPerDayDict):
                 num = len(self.sortedWordsPerDayDict)
-            for x in xrange(0,num):
-                self.makeOutputPretty(self.sortedWordsPerDayDict[x])
+            for x in xrange(0, min(num, len(self.sortedWordsPerDayDict))):
+                self.makeOutputPrettyWPD(self.sortedWordsPerDayDict[x])
         elif option == 'namesPerDay':
             self.sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
             self.sortedNamesPerDayDict.reverse()
             if num > len(self.sortedNamesPerDayDict):
                 num = len(self.sortedNamesPerDayDict)
-            for x in xrange(0,num):
+            for x in xrange(0, min(num, self.sortedNamesPerDayDict)):
                 self.makeOutputPretty(self.sortedNamesPerDayDict[x])
         else: #regular words
             self.sortedWordsDict = sorted(self.wordsDict.items(), key=operator.itemgetter(1))
             self.sortedWordsDict.reverse()
             if num > len(self.sortedWordsDict):
                 num = len(self.sortedWordsDict)
-            for x in xrange(0,num):
+            for x in xrange(0, min(num, self.sortedWordsDict)):
                 self.makeOutputPretty(self.sortedWordsDict[x])
 
     #Put date into a format that can be recognized by datetime
@@ -298,14 +305,6 @@ class WordFrequencies:
                 numWords += self.addLine(line, currentDate)
                 self.guessNames(line)
             line = f.readline()
-        try:
-            print self.wordCountOfEntriesDict['01-01-17']
-            print self.wordCountOfEntriesDict['01-02-17']
-            print self.wordCountOfEntriesDict['01-03-17']
-            print self.wordCountOfEntriesDict['01-04-17']
-            print self.wordCountOfEntriesDict['01-05-17']
-        except:
-            pass
 
     def callInputFunction(self, inp, arg):
         if inp == 'highest':
@@ -404,12 +403,15 @@ length of entries / average length of entries per day / look up or graph trends
 
 all doesn't work as keyword
 
-
 replace data structures with something more readable and maintainable (some sort of named nested tree maybe)
 
 hold whether the first letter was a capital letter in the data structure
 
 flag to ignore trailing s and then combine both "word" and "words" into same 
+
+enter new path doesn't work if initial one isn't valid
+
+support ranges (so print 10th to 20th highest for example)
 
 
 analytics:

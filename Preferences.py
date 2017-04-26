@@ -1,3 +1,3 @@
 class Preferences:
-    combinePlurals = False
-    debug = False
+    COMBINE_PLURALS = False
+    DEBUG = False
