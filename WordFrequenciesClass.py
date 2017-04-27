@@ -310,7 +310,7 @@ class WordFrequencies:
             self.printHighest(args[0], 'namesPerDay')
         elif inp == 'addname':
             self.addName(args[0])
-        elif inp == 'exit'
+        elif inp == 'exit':
             return False
         else:
             print 'Unknown command.'
@@ -340,20 +340,6 @@ class WordFrequencies:
     def main(self, fileurl):
         self.makeNamesSet()
         self.readFile(fileurl)
-
-        #TODO: there's a better way to do this I'm sure
-        # regexDict = {
-        #     re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
-        #     re.compile('\s*wpd\s+([\d]+|all)\s*', re.IGNORECASE): 'wpd',
-        #     re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
-        #     re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
-        #     re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
-        #     re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
-        #     #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
-        #     re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
-        #     re.compile('\s*option\s+', re.IGNORECASE): 'option',
-        #     re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
-        # } #TODO: just split at spaces and use that for parsing
         
         while True:
             print '''
@@ -371,13 +357,6 @@ class WordFrequencies:
     '''
             if (not self.parseInputString(raw_input('>'))):
                 return
-            # inp = raw_input('>')
-            # for regex in regexDict.keys():
-            #     matches = regex.match(inp)
-            #     if matches != None:
-            #         if regexDict[regex] == 'exit':
-            #             return
-            #         self.callInputFunction(regexDict[regex], matches.groups(0)[0])
 
 if __name__ == '__main__':
     wf = WordFrequencies()
