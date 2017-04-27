@@ -139,25 +139,7 @@ class WordFrequencies:
 
             plt.show()
         except:
-            print 'Illegal input - must be a valid name'
-
-    '''
-    #graphs unique occurences of a name per day
-    def graphAnalyticsPerDay(self, name):
-        #{ word : [ [ date , count ] ] }
-        try:
-            x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in self.namesToGraphDictUniqueOccurences[name]]
-            y = [count[1] for count in self.namesToGraphDictUniqueOccurences[name]]
-            
-            ax = plt.subplot(111)
-            ax.bar(x, y, width=2)
-            ax.set_xlabel('Date')
-            ax.set_ylabel('')
-            ax.xaxis_date()
-            plt.show()
-        except:
-            print 'Illegal input - must be a valid name'
-    '''
+            print 'Invalid input - must be a valid name'
 
     def lookupWord(self, word):
         print word + ': '
@@ -227,40 +209,62 @@ class WordFrequencies:
         
     #print the x most occuring words
     #num: number to print. if 'all', prints all
-    def printHighest(self, num_in, option):
-        if num_in == 'all':
-            num = float('inf') #TODO: test this with all cases
-        else:
-            num = int(num_in)
-        if option == 'names':
-            self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
-            self.sortedNamesDict.reverse()
-            if num > len(self.sortedNamesDict):
-                num = len(self.sortedNamesDict)
-            self.makePrettyHeader()
-            for x in xrange(0, min(num, len(self.sortedNamesDict))):
-                self.makeOutputPretty(self.sortedNamesDict[x])
-        elif option == 'wordsPerDay':
-            self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
-            self.sortedWordsPerDayDict.reverse()
-            if num > len(self.sortedWordsPerDayDict):
-                num = len(self.sortedWordsPerDayDict)
-            for x in xrange(0, min(num, len(self.sortedWordsPerDayDict))):
-                self.makeOutputPrettyWPD(self.sortedWordsPerDayDict[x])
-        elif option == 'namesPerDay':
-            self.sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
-            self.sortedNamesPerDayDict.reverse()
-            if num > len(self.sortedNamesPerDayDict):
-                num = len(self.sortedNamesPerDayDict)
-            for x in xrange(0, min(num, self.sortedNamesPerDayDict)):
-                self.makeOutputPretty(self.sortedNamesPerDayDict[x])
-        else: #regular words
-            self.sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
-            self.sortedWordsDict.reverse()
-            if num > len(self.sortedWordsDict):
-                num = len(self.sortedWordsDict)
-            for x in xrange(0, min(num, self.sortedWordsDict)):
-                self.makeOutputPrettyWordsDict(self.sortedWordsDict[x])
+    def printHighest(self, args, option):
+        start_num = 0
+        end_num = 0
+        print args
+        if len(args) == 1: #only an end num
+            try:
+                if (args[0] == 'all'):
+                    end_num = float('inf')
+                else:
+                    end_num = int(args[0])
+            except:
+                print 'Invalid arguments'
+        elif len(args) >= 2: #start and end
+            try:
+                start_num = int(args[0])
+                if (args[1] == 'all'):
+                    end_num = float('inf')
+                else:
+                    end_num = int(args[1])
+            except:
+                print 'Invalid arguments'
+
+        print 'start: ',
+        print start_num
+        print 'end: ',
+        print end_num
+
+        # if option == 'names':
+        #     self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
+        #     self.sortedNamesDict.reverse()
+        #     if num > len(self.sortedNamesDict):
+        #         num = len(self.sortedNamesDict)
+        #     self.makePrettyHeader()
+        #     for x in xrange(0, min(num, len(self.sortedNamesDict))):
+        #         self.makeOutputPretty(self.sortedNamesDict[x])
+        # elif option == 'wordsPerDay':
+        #     self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
+        #     self.sortedWordsPerDayDict.reverse()
+        #     if num > len(self.sortedWordsPerDayDict):
+        #         num = len(self.sortedWordsPerDayDict)
+        #     for x in xrange(0, min(num, len(self.sortedWordsPerDayDict))):
+        #         self.makeOutputPrettyWPD(self.sortedWordsPerDayDict[x])
+        # elif option == 'namesPerDay':
+        #     self.sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
+        #     self.sortedNamesPerDayDict.reverse()
+        #     if num > len(self.sortedNamesPerDayDict):
+        #         num = len(self.sortedNamesPerDayDict)
+        #     for x in xrange(0, min(num, self.sortedNamesPerDayDict)):
+        #         self.makeOutputPretty(self.sortedNamesPerDayDict[x])
+        # else: #regular words
+        self.sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
+        self.sortedWordsDict.reverse()
+        if end_num > len(self.sortedWordsDict):
+            end_num = len(self.sortedWordsDict)
+        for x in xrange(start_num, min(end_num, len(self.sortedWordsDict))):
+            self.makeOutputPrettyWordsDict(self.sortedWordsDict[x])
 
     def readFile(self, url):
         try:
@@ -295,29 +299,26 @@ class WordFrequencies:
     #args is a list of arguments in order
     def callInputFunction(self, inp, args):
         if inp == 'highest':
-            self.printHighest(args[0], None)
+            self.printHighest(args, None)
         elif inp == 'lookup':
-            self.lookupWord(args[0])
+            self.lookupWord(args)
         elif inp == 'names':
-            self.printHighest(args[0], 'names')
+            self.printHighest(args, 'names')
         elif inp == 'graph':
-            self.graphAnalytics(args[0])
+            self.graphAnalytics(args)
         elif inp == 'gpd':
-            self.graphAnalyticsPerDay(args[0])
+            self.graphAnalyticsPerDay(args)
         elif inp == 'wpd':
-            self.printHighest(args[0], 'wordsPerDay')
+            self.printHighest(args, 'wordsPerDay')
         elif inp == 'npd':
-            self.printHighest(args[0], 'namesPerDay')
+            self.printHighest(args, 'namesPerDay')
         elif inp == 'addname':
-            self.addName(args[0])
+            self.addName(args)
         elif inp == 'exit':
             return False
         else:
             print 'Unknown command.'
         return True
-
-    def enableVerbosity(self):
-        verbose = True;
 
     #populate namesList from file
     def makeNamesSet(self):
@@ -331,10 +332,12 @@ class WordFrequencies:
             self.namesSet.add(line.strip().lower())
             line = f.readline()
 
-    def parseInputString(self, inpStr):
+    def parseInput(self, inpStr):
         parts = inpStr.split()
         command = parts[0]
         args = parts[1:]
+        if (self.prefs.VERBOSE):
+            print 'Parsed arguments: command: ' + str(command) + ' args: ' + str(args)
         return self.callInputFunction(command, args)
 
     def main(self, fileurl):
@@ -344,7 +347,7 @@ class WordFrequencies:
         while True:
             print '''
     Options:
-    Highest x words             highest [num | all]
+    Highest x words             highest [num | all] (num | all)
     Highest x words per day     wpd [num | all]
     Lookup                      lookup [word]
     Highest x names             names [num | all]
@@ -355,7 +358,7 @@ class WordFrequencies:
     Set Options                 option [option_name] [value]
     Exit                        exit
     '''
-            if (not self.parseInputString(raw_input('>'))):
+            if (not self.parseInput(raw_input('>'))):
                 return
 
 if __name__ == '__main__':
