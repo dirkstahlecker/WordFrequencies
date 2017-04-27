@@ -19,7 +19,6 @@ class WordFrequencies:
     wordCountOfEntriesDict = {} #{ date : word count }
     guessedNamesSet = set()
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
-    illegalCharacters = ['\\','{','}'] #characters that a word can't start with
     prefs = Preferences() #stored the user's preferences for various things
 
     WORD_COL_WIDTH = 20
@@ -69,20 +68,13 @@ class WordFrequencies:
             f.write(name) + '\n'
         f.close()
 
-    def valid(self, word):
-        if len(word) == 0:
-            return False;
-        if word[0] in self.illegalCharacters:
-            return False
-        return True
-
     #parse a line and add the words to the dictionaries
     def addLine(self, line, currentDate):
         words = line.split(' ')
         for word in words:
             word = Helper.cleanWord(word)
 
-            if not self.valid(word):
+            if not Helper.valid(word):
                 continue
 
             #names
@@ -117,9 +109,9 @@ class WordFrequencies:
 
             #words
             try:
-                self.wordsDict[word] = (self.wordsDict[word][0] + 1, currentDate, self.wordsDict[word][2])
+                self.wordsDict[word] = {'count': self.wordsDict[word]['count'] + 1, 'lastDate': currentDate, 'firstDate': self.wordsDict[word]['firstDate']}
             except:
-                self.wordsDict[word] = (1, currentDate, currentDate)
+                self.wordsDict[word] = {'count': 1, 'lastDate': currentDate, 'firstDate': currentDate}
             
             #words per day
             try:
@@ -144,6 +136,7 @@ class WordFrequencies:
             plt.show()
         except:
             print 'Illegal input - must be a valid name'
+
     '''
     #graphs unique occurences of a name per day
     def graphAnalyticsPerDay(self, name):
@@ -162,21 +155,13 @@ class WordFrequencies:
             print 'Illegal input - must be a valid name'
     '''
 
-    def lookupWordPrompt(self):
-        while True:
-            inp = raw_input('Enter word for lookup: ')
-            try:
-                print inp + ': ' + str(self.wordsDict[inp])
-            except:
-                print 'Word not found'
-
     def lookupWord(self, word):
         print word + ': '
-        print 'First usage: ' + str(self.wordsDict[word][2])
-        print 'Last usage: ' + str(self.wordsDict[word][1])
-        total_uses = self.wordsDict[word][0]
+        print 'First usage: ' + str(self.wordsDict[word]['firstDate'])
+        print 'Last usage: ' + str(self.wordsDict[word]['lastDate'])
+        total_uses = self.wordsDict[word]['count']
         print 'Total usages: ' + str(total_uses)
-        length = Helper.subtractDates(self.wordsDict[word][1], self.wordsDict[word][2]).days
+        length = Helper.subtractDates(self.wordsDict[word]['lastDate'], self.wordsDict[word]['firstDate']).days
         print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
         #print 'Percentage of days with a useage: ' + str()
@@ -227,6 +212,12 @@ class WordFrequencies:
         date = inp[1]['lastOccurence']
         self.makeOutputPrettyHelper(False, word, count, date)
 
+    def makeOutputPrettyWordsDict(self, inp): #( word : { 'count': count, 'lastDate': last occurence, 'firstDate': first occurence } )
+        word = inp[0]
+        count = inp[1]['count']
+        date = inp[1]['lastDate']
+        self.makeOutputPrettyHelper(False, word, count, date)
+
     def makePrettyHeader(self):
         self.makeOutputPrettyHelper(True, '', '', '')
         
@@ -260,31 +251,21 @@ class WordFrequencies:
             for x in xrange(0, min(num, self.sortedNamesPerDayDict)):
                 self.makeOutputPretty(self.sortedNamesPerDayDict[x])
         else: #regular words
-            self.sortedWordsDict = sorted(self.wordsDict.items(), key=operator.itemgetter(1))
+            self.sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
             self.sortedWordsDict.reverse()
             if num > len(self.sortedWordsDict):
                 num = len(self.sortedWordsDict)
             for x in xrange(0, min(num, self.sortedWordsDict)):
-                self.makeOutputPretty(self.sortedWordsDict[x])
-
-    #Put date into a format that can be recognized by datetime
-    def formatDate(self, date_in):
-        date = date_in.strip().lstrip();
-
-        #currently assume they're fairly correctly formatted
-        #won't get in here in the first place if they're not
-        if re.search('^[0-9]-', date):
-            date = '0' + date
-        if re.search('-[0-9]-', date):
-            date = date[:3] + '0' + date[3:]
-        return date
+                self.makeOutputPrettyWordsDict(self.sortedWordsDict[x])
 
     def readFile(self, url):
         try:
             f = open(url, 'r')
         except:
             print('File not found')
-            self.readFile(raw_input('Enter new path > ')) #TODO: not sure if this works
+            newPath = raw_input('Enter new path > ');
+            self.readFile(newPath) #TODO: this doesn't work for unknown reasons
+            return
 
         newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
         currentDate = None;
@@ -298,13 +279,14 @@ class WordFrequencies:
                 self.wordCountOfEntriesDict[currentDate] = numWords
                 numWords = 0
                 currentDate = res.group(0);
-                currentDate = self.formatDate(currentDate)
+                currentDate = Helper.formatDate(currentDate)
                 line = line[len(currentDate):] #remove date from line, so it's not a word
 
             if currentDate != None:
                 numWords += self.addLine(line, currentDate)
                 self.guessNames(line)
             line = f.readline()
+        f.close()
 
     def callInputFunction(self, inp, arg):
         if inp == 'highest':
@@ -356,6 +338,7 @@ class WordFrequencies:
             re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
             #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
             re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
+            re.compile('\s*option\s+', re.IGNORECASE): 'option',
             re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
         }
         
@@ -370,6 +353,7 @@ class WordFrequencies:
     Graph names                 graph [name]
     Graph names per day         gpd [name]
     Add name                    add name [name]
+    Set Options                 option [option_name] [value]
     Exit                        exit
     '''
             inp = raw_input('>')
@@ -401,8 +385,6 @@ distinguish between different people with the same spelling of names
     possibly by looking at other people that are frequently mentioned with them in the same day to determine
 length of entries / average length of entries per day / look up or graph trends
 
-all doesn't work as keyword
-
 replace data structures with something more readable and maintainable (some sort of named nested tree maybe)
 
 hold whether the first letter was a capital letter in the data structure
@@ -413,6 +395,6 @@ enter new path doesn't work if initial one isn't valid
 
 support ranges (so print 10th to 20th highest for example)
 
+allow graphing for words and not just names
 
-analytics:
 '''
