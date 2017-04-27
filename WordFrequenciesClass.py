@@ -51,7 +51,8 @@ class WordFrequencies:
             return
 
     #Add a name manually to the names set
-    def addName(self, name):
+    def addName(self, args):
+        name = args[0]
         if name in self.namesDict:
             print "Name already added"
             return
@@ -71,6 +72,7 @@ class WordFrequencies:
     #parse a line and add the words to the dictionaries
     def addLine(self, line, currentDate):
         words = line.split(' ')
+        wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
         for word in words:
             wasUpper = False;
             if word[:1].isupper():
@@ -79,6 +81,7 @@ class WordFrequencies:
 
             if not Helper.valid(word):
                 continue
+            wordsToCount += 1
 
             #names
             if word in self.namesSet and (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
@@ -124,11 +127,12 @@ class WordFrequencies:
             except:
                     self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
 
-        return len(words)
+        return wordsToCount
 
     #graphs the number of occurences of the name per day
-    def graphAnalytics(self, name):
+    def graphAnalytics(self, args):
         #{ word : [ [ date , count ] ] }
+        name = args[0]
         try:
             x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in self.namesToGraphDict[name]]
             y = [count[1] for count in self.namesToGraphDict[name]]
@@ -141,16 +145,19 @@ class WordFrequencies:
         except:
             print 'Invalid input - must be a valid name'
 
-    def lookupWord(self, word):
+    def lookupWord(self, args):
+        word = args[0]
         print word + ': '
         print 'First usage: ' + str(self.wordsDict[word]['firstDate'])
         print 'Last usage: ' + str(self.wordsDict[word]['lastDate'])
         total_uses = self.wordsDict[word]['count']
+        total_days_used = self.wordsPerDayDict[word]['count']
+        total_number_of_days = len(self.wordCountOfEntriesDict)
         print 'Total usages: ' + str(total_uses)
         length = Helper.subtractDates(self.wordsDict[word]['lastDate'], self.wordsDict[word]['firstDate']).days
         print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
-        #print 'Percentage of days with a useage: ' + str()
+        print 'Percentage of days with a useage: ' + str(float(total_days_used) / total_number_of_days)
 
     def printAll(self, names):
         self.printHighest(float('inf'), names)
@@ -212,7 +219,6 @@ class WordFrequencies:
     def printHighest(self, args, option):
         start_num = 0
         end_num = 0
-        print args
         if len(args) == 1: #only an end num
             try:
                 if (args[0] == 'all'):
@@ -231,10 +237,11 @@ class WordFrequencies:
             except:
                 print 'Invalid arguments'
 
-        print 'start: ',
-        print start_num
-        print 'end: ',
-        print end_num
+        if self.prefs.VERBOSE:
+            print 'start_num: ',
+            print start_num,
+            print ' end_num ',
+            print end_num
 
         if option == 'names':
             self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
@@ -284,7 +291,8 @@ class WordFrequencies:
             #check a line to see if it's a date, therefore a new day
             res = newdate.match(line)
             if res != None: #date found
-                self.wordCountOfEntriesDict[currentDate] = numWords
+                if numWords > 0:
+                    self.wordCountOfEntriesDict[currentDate] = numWords #should be here, since we want it triggered at the end
                 numWords = 0
                 currentDate = res.group(0);
                 currentDate = Helper.formatDate(currentDate)
@@ -294,11 +302,15 @@ class WordFrequencies:
                 numWords += self.addLine(line, currentDate)
                 self.guessNames(line)
             line = f.readline()
+
+        #need to capture the last date for the entry length
+        self.wordCountOfEntriesDict[currentDate] = numWords 
         f.close()
 
     #args is a list of arguments in order
     def callInputFunction(self, inp, args):
         if inp == 'highest':
+            print self.wordCountOfEntriesDict
             self.printHighest(args, None)
         elif inp == 'lookup':
             self.lookupWord(args)
@@ -314,6 +326,8 @@ class WordFrequencies:
             self.printHighest(args, 'namesPerDay')
         elif inp == 'addname':
             self.addName(args)
+        elif inp == 'option':
+            pass
         elif inp == 'exit':
             return False
         else:
@@ -358,7 +372,7 @@ class WordFrequencies:
     Set Options                 option [option_name] [value]
     Exit                        exit
     '''
-            if (not self.parseInput(raw_input('>'))):
+            if not self.parseInput(raw_input('>')):
                 return
 
 if __name__ == '__main__':
@@ -373,7 +387,6 @@ if __name__ == '__main__':
 
 
 
-
 '''
 TODO: 
 something weird going on with apostrophes (specifically "didn't")
@@ -384,13 +397,9 @@ length of entries / average length of entries per day / look up or graph trends
 
 replace data structures with something more readable and maintainable (some sort of named nested tree maybe)
 
-hold whether the first letter was a capital letter in the data structure
-
 flag to ignore trailing s and then combine both "word" and "words" into same 
 
 enter new path doesn't work if initial one isn't valid
-
-support ranges (so print 10th to 20th highest for example)
 
 allow graphing for words and not just names
 
