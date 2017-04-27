@@ -10,7 +10,7 @@ from Preferences import Preferences
 
 class WordFrequencies:
     namesSet = set()
-    wordsDict = {} #{ word : ( count , last occurence , first occurence ) }
+    wordsDict = {} #{ word : { 'count': count , 'lastDate': last occurence , 'firstDate': first occurence , 'wasUpper': started with uppercase letter } }
     namesDict = {} #{ name : ( count , last occurence ) }
     wordsPerDayDict = {} #{ word : { 'count': count , 'lastOccurence': last occurence } } only counts one occurence per day
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
@@ -72,13 +72,16 @@ class WordFrequencies:
     def addLine(self, line, currentDate):
         words = line.split(' ')
         for word in words:
+            wasUpper = False;
+            if word[:1].isupper():
+                wasUpper = True;
             word = Helper.cleanWord(word)
 
             if not Helper.valid(word):
                 continue
 
             #names
-            if word in self.namesSet:
+            if word in self.namesSet and (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
                 try:
                     self.namesDict[word] = (self.namesDict[word][0] + 1, currentDate)
                 except:
@@ -109,7 +112,8 @@ class WordFrequencies:
 
             #words
             try:
-                self.wordsDict[word] = {'count': self.wordsDict[word]['count'] + 1, 'lastDate': currentDate, 'firstDate': self.wordsDict[word]['firstDate']}
+                self.wordsDict[word] = {'count': self.wordsDict[word]['count'] + 1, 
+                'lastDate': currentDate, 'firstDate': self.wordsDict[word]['firstDate'], 'wasUpper': wasUpper}
             except:
                 self.wordsDict[word] = {'count': 1, 'lastDate': currentDate, 'firstDate': currentDate}
             
@@ -264,7 +268,7 @@ class WordFrequencies:
         except:
             print('File not found')
             newPath = raw_input('Enter new path > ');
-            self.readFile(newPath) #TODO: this doesn't work for unknown reasons
+            self.readFile(newPath) #TODO: this doesn't work for entirely unknown reasons
             return
 
         newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
@@ -288,25 +292,29 @@ class WordFrequencies:
             line = f.readline()
         f.close()
 
-    def callInputFunction(self, inp, arg):
+    #args is a list of arguments in order
+    def callInputFunction(self, inp, args):
         if inp == 'highest':
-            self.printHighest(arg, None)
+            self.printHighest(args[0], None)
         elif inp == 'lookup':
-            self.lookupWord(arg)
+            self.lookupWord(args[0])
         elif inp == 'names':
-            self.printHighest(arg, 'names')
+            self.printHighest(args[0], 'names')
         elif inp == 'graph':
-            self.graphAnalytics(arg)
+            self.graphAnalytics(args[0])
         elif inp == 'gpd':
-            self.graphAnalyticsPerDay(arg)
+            self.graphAnalyticsPerDay(args[0])
         elif inp == 'wpd':
-            self.printHighest(arg, 'wordsPerDay')
+            self.printHighest(args[0], 'wordsPerDay')
         elif inp == 'npd':
-            self.printHighest(arg, 'namesPerDay')
+            self.printHighest(args[0], 'namesPerDay')
         elif inp == 'addname':
-            self.addName(arg)
+            self.addName(args[0])
+        elif inp == 'exit'
+            return False
         else:
             print 'Unknown command.'
+        return True
 
     def enableVerbosity(self):
         verbose = True;
@@ -323,24 +331,29 @@ class WordFrequencies:
             self.namesSet.add(line.strip().lower())
             line = f.readline()
 
+    def parseInputString(self, inpStr):
+        parts = inpStr.split()
+        command = parts[0]
+        args = parts[1:]
+        return self.callInputFunction(command, args)
+
     def main(self, fileurl):
         self.makeNamesSet()
         self.readFile(fileurl)
-        
-        legalWordParts = '[^{}]'
+
         #TODO: there's a better way to do this I'm sure
-        regexDict = {
-            re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
-            re.compile('\s*wpd\s+([\d]+|all)\s*', re.IGNORECASE): 'wpd',
-            re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
-            re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
-            re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
-            re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
-            #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
-            re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
-            re.compile('\s*option\s+', re.IGNORECASE): 'option',
-            re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
-        }
+        # regexDict = {
+        #     re.compile('\s*highest\s+([\d]+|all)\s*', re.IGNORECASE): 'highest',
+        #     re.compile('\s*wpd\s+([\d]+|all)\s*', re.IGNORECASE): 'wpd',
+        #     re.compile('\s*[l|L]ookup\s+([^{}]+)\s*', re.IGNORECASE): 'lookup',
+        #     re.compile('\s*names\s+([\d]+|all)\s*', re.IGNORECASE): 'names',
+        #     re.compile('\s*npd\s+([\d]+|all)\s*', re.IGNORECASE): 'npd',
+        #     re.compile('\s*graph\s+([^{}]+)\s*', re.IGNORECASE): 'graph',
+        #     #re.compile('\s*gpd\s+([^{}]+)\s*', re.IGNORECASE): 'gpd',
+        #     re.compile('\s*add name\s+([^{}]+)\s*', re.IGNORECASE): 'addname',
+        #     re.compile('\s*option\s+', re.IGNORECASE): 'option',
+        #     re.compile('\s*exit\s*', re.IGNORECASE): 'exit'
+        # } #TODO: just split at spaces and use that for parsing
         
         while True:
             print '''
@@ -356,13 +369,15 @@ class WordFrequencies:
     Set Options                 option [option_name] [value]
     Exit                        exit
     '''
-            inp = raw_input('>')
-            for regex in regexDict.keys():
-                matches = regex.match(inp)
-                if matches != None:
-                    if regexDict[regex] == 'exit':
-                        return
-                    self.callInputFunction(regexDict[regex], matches.groups(0)[0])
+            if (not self.parseInputString(raw_input('>'))):
+                return
+            # inp = raw_input('>')
+            # for regex in regexDict.keys():
+            #     matches = regex.match(inp)
+            #     if matches != None:
+            #         if regexDict[regex] == 'exit':
+            #             return
+            #         self.callInputFunction(regexDict[regex], matches.groups(0)[0])
 
 if __name__ == '__main__':
     wf = WordFrequencies()
