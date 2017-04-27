@@ -236,35 +236,35 @@ class WordFrequencies:
         print 'end: ',
         print end_num
 
-        # if option == 'names':
-        #     self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
-        #     self.sortedNamesDict.reverse()
-        #     if num > len(self.sortedNamesDict):
-        #         num = len(self.sortedNamesDict)
-        #     self.makePrettyHeader()
-        #     for x in xrange(0, min(num, len(self.sortedNamesDict))):
-        #         self.makeOutputPretty(self.sortedNamesDict[x])
-        # elif option == 'wordsPerDay':
-        #     self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
-        #     self.sortedWordsPerDayDict.reverse()
-        #     if num > len(self.sortedWordsPerDayDict):
-        #         num = len(self.sortedWordsPerDayDict)
-        #     for x in xrange(0, min(num, len(self.sortedWordsPerDayDict))):
-        #         self.makeOutputPrettyWPD(self.sortedWordsPerDayDict[x])
-        # elif option == 'namesPerDay':
-        #     self.sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
-        #     self.sortedNamesPerDayDict.reverse()
-        #     if num > len(self.sortedNamesPerDayDict):
-        #         num = len(self.sortedNamesPerDayDict)
-        #     for x in xrange(0, min(num, self.sortedNamesPerDayDict)):
-        #         self.makeOutputPretty(self.sortedNamesPerDayDict[x])
-        # else: #regular words
-        self.sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
-        self.sortedWordsDict.reverse()
-        if end_num > len(self.sortedWordsDict):
-            end_num = len(self.sortedWordsDict)
-        for x in xrange(start_num, min(end_num, len(self.sortedWordsDict))):
-            self.makeOutputPrettyWordsDict(self.sortedWordsDict[x])
+        if option == 'names':
+            self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
+            self.sortedNamesDict.reverse()
+            if end_num > len(self.sortedNamesDict):
+                end_num = len(self.sortedNamesDict)
+            self.makePrettyHeader()
+            for x in xrange(start_num, min(end_num, len(self.sortedNamesDict))):
+                self.makeOutputPretty(self.sortedNamesDict[x])
+        elif option == 'wordsPerDay':
+            self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
+            self.sortedWordsPerDayDict.reverse()
+            if end_num > len(self.sortedWordsPerDayDict):
+                end_num = len(self.sortedWordsPerDayDict)
+            for x in xrange(start_num, min(end_num, len(self.sortedWordsPerDayDict))):
+                self.makeOutputPrettyWPD(self.sortedWordsPerDayDict[x])
+        elif option == 'namesPerDay':
+            self.sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
+            self.sortedNamesPerDayDict.reverse()
+            if end_num > len(self.sortedNamesPerDayDict):
+                end_num = len(self.sortedNamesPerDayDict)
+            for x in xrange(start_num, min(end_num, self.sortedNamesPerDayDict)):
+                self.makeOutputPretty(self.sortedNamesPerDayDict[x])
+        else: #regular words
+            self.sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
+            self.sortedWordsDict.reverse()
+            if end_num > len(self.sortedWordsDict):
+                end_num = len(self.sortedWordsDict)
+            for x in xrange(start_num, min(end_num, len(self.sortedWordsDict))):
+                self.makeOutputPrettyWordsDict(self.sortedWordsDict[x])
 
     def readFile(self, url):
         try:
