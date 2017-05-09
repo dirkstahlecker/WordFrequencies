@@ -18,8 +18,8 @@ class WordFrequencies:
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
     wordCountOfEntriesDict = {} #{ date : word count }
     guessedNamesSet = set()
-    firstDate = datetime.datetime(datetime.MINYEAR,1,1)
-    lastDate = None;
+    firstDate = datetime.datetime(datetime.MAXYEAR,12,31)
+    mostRecentDate = datetime.datetime(datetime.MINYEAR,1,1)
 
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     prefs = Preferences() #stored the user's preferences for various things
@@ -152,6 +152,21 @@ class WordFrequencies:
         except:
             print 'Unknown error occured while graphing'
 
+    #graphs a bar for each day that an entry exists
+    def graphEntries(self, args):
+        #{ date : word count }
+        sortedLengthOfEntriesDict = sorted(self.wordCountOfEntriesDict.items(), key=operator.itemgetter(1))
+        x = [i[0] for i in sortedLengthOfEntriesDict]
+        y = [1 for j in sortedLengthOfEntriesDict]
+
+        print x
+
+        ax = plt.subplot(111)
+        ax.bar(x, y, width=2)
+        ax.xaxis_date()
+
+        plt.show()
+
     def lookupWord(self, args):
         word = args[0]
         print word + ': '
@@ -172,13 +187,13 @@ class WordFrequencies:
         print 'First entry: ',
         print self.firstDate
         print 'Last entry: ',
-        print self.lastDate
-        #print 'Percentage of days from first to last with an entry: ',
-        print self.firstDate
-        print self.lastDate
-        totalDays = Helper.subtractDates(self.lastDate, self.firstDate) #this is a datetime object
-        print totalDays
-        print type(totalDays)
+        print self.mostRecentDate
+        print 'Total days from first to last entry: ',
+        totalDays = self.mostRecentDate - self.firstDate #this is correct
+        days = totalDays.days
+        print days
+        print 'Percentage of days from first to last with an entry: ',
+        print str(round(float(len(self.wordCountOfEntriesDict)) / days * 100, 2)) + '%'
 
     def makeOutputPrettyHelper(self, word, count, date):
         date = str(date)
@@ -346,10 +361,15 @@ class WordFrequencies:
                 currentDateStr = Helper.formatDateStringIntoCleanedString(currentDateStr)
                 currentDateObj = Helper.makeDateObject(currentDateStr)
                 assert currentDateObj != None
-                if Helper.compareDates(currentDateObj, self.lastDate) == 1: #current date is greater
-                    self.lastDate = currentDateObj
-                if Helper.compareDates(self.firstDate, currentDateObj) == 1: #current date is less than first date
+                if currentDateObj > self.mostRecentDate: #found a higher date than what we've seen so far
+                    self.mostRecentDate = currentDateObj
+                if currentDateObj < self.firstDate: #found a lower date than what we have now
                     self.firstDate = currentDateObj
+
+                # if Helper.compareDates(currentDateObj, self.mostRecentDate) == 1: #current date is greater
+                #     self.mostRecentDate = currentDateObj
+                # if Helper.compareDates(self.firstDate, currentDateObj) == 1: #current date is less than first date
+                #     self.firstDate = currentDateObj
 
                 line = line[len(currentDateStr):] #remove date from line, so it's not a word
 
@@ -372,6 +392,8 @@ class WordFrequencies:
             self.printHighest(args, 'names')
         elif inp == 'graph':
             self.graphAnalytics(args)
+        elif inp == 'graphentries':
+            self.graphEntries(args)
         # elif inp == 'gpd':
         #     self.graphAnalyticsPerDay(args)
         elif inp == 'wpd':
@@ -425,6 +447,7 @@ class WordFrequencies:
     Highest x names             names [num | all]
     Highest x names per day     npd [num | all]
     Graph names                 graph [name]
+    Graph entries               graphentries
     Add name                    add name [name]
     Set Options                 option [option_name] [value]
     Length                      length [num | all]
@@ -462,16 +485,15 @@ enter new path doesn't work if initial one isn't valid
 
 allow graphing for words and not just names
 
-general analytics 
-    total number of entries 
-    percentage of total days with an entry 
-
 what names each name is frequently found with 
 
 pretty printing of dates
 
+figure out how to deal with "[date] through [date]:"
+
 
 Bugs:
 fix axes on graphing
+firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's the first date in there
 
 '''
