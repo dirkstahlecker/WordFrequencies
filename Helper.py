@@ -19,7 +19,6 @@ class Helper:
 
     @staticmethod
     def makeDateObject(dateStr):
-        # print dateStr
         split1 = dateStr.find('-')
         split2 = dateStr.find('-',split1)
         split2 = split2 + split1 + 1
@@ -27,39 +26,8 @@ class Helper:
         month = int(dateStr[:split1])
         day = int(dateStr[split1+1:split2])
         year = int(dateStr[split2+1:])
-        # print 'year: ',
-        # print year
-        # print 'month: ',
-        # print month
-        # print 'day: ',
-        # print day
 
         return datetime(year=year, month=month, day=day)
-
-    #returns date1 - date2 in date format
-    @staticmethod
-    def subtractDates(date1, date2): 
-        # print 'date1: ',
-        # print date1
-        # print 'date2: ',
-        # print date2
-        # print type(date1)
-        # print type(date2)
-        diff = date1 - date2
-        return diff
-
-    @staticmethod
-    def compareDates(date1, date2):
-        #TODO: last can be None
-        if date2 == None:
-            return 1
-
-        #TODO: this method is unnecessary once all dates are datetime objects
-        if date1 > date2:
-            return 1
-        elif date1 < date2:
-            return -1
-        return 0
 
     @staticmethod
     def valid(word):

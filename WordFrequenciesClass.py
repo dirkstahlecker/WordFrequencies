@@ -17,6 +17,8 @@ class WordFrequencies:
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
     wordCountOfEntriesDict = {} #{ date : word count }
+    
+
     guessedNamesSet = set()
     firstDate = datetime.datetime(datetime.MAXYEAR,12,31)
     mostRecentDate = datetime.datetime(datetime.MINYEAR,1,1)
@@ -176,7 +178,7 @@ class WordFrequencies:
         total_days_used = self.wordsPerDayDict[word]['count']
         total_number_of_days = len(self.wordCountOfEntriesDict)
         print 'Total usages: ' + str(total_uses)
-        length = Helper.subtractDates(self.wordsDict[word]['lastDate'], self.wordsDict[word]['firstDate']).days
+        length = (self.wordsDict[word]['lastDate'] - self.wordsDict[word]['firstDate']).days
         print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
         print 'Percentage of days with a useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%'
@@ -365,12 +367,6 @@ class WordFrequencies:
                     self.mostRecentDate = currentDateObj
                 if currentDateObj < self.firstDate: #found a lower date than what we have now
                     self.firstDate = currentDateObj
-
-                # if Helper.compareDates(currentDateObj, self.mostRecentDate) == 1: #current date is greater
-                #     self.mostRecentDate = currentDateObj
-                # if Helper.compareDates(self.firstDate, currentDateObj) == 1: #current date is less than first date
-                #     self.firstDate = currentDateObj
-
                 line = line[len(currentDateStr):] #remove date from line, so it's not a word
 
             if currentDateStr != None:
