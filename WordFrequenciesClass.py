@@ -17,7 +17,7 @@ class WordFrequencies:
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
     wordCountOfEntriesDict = {} #{ date : word count }
-    
+    relatedNamesDict = {} #{ name : { name : unique day count } }
 
     guessedNamesSet = set()
     firstDate = datetime.datetime(datetime.MAXYEAR,12,31)
@@ -78,6 +78,7 @@ class WordFrequencies:
     def addLine(self, line, currentDate):
         words = line.split(' ')
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
+        namesFound = set()
         for word in words:
             wasUpper = False;
             if word[:1].isupper():
@@ -90,6 +91,8 @@ class WordFrequencies:
 
             #names
             if word in self.namesSet and (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
+                namesFound.add(word)
+
                 try:
                     self.namesDict[word] = (self.namesDict[word][0] + 1, currentDate)
                 except:
@@ -132,7 +135,7 @@ class WordFrequencies:
             except:
                     self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
 
-        return wordsToCount
+        return (wordsToCount, namesFound)
 
     #graphs the number of occurences of the name per day
     def graphAnalytics(self, args):
@@ -337,6 +340,21 @@ class WordFrequencies:
             for x in xrange(start_num, end_num):
                 self.makeOutputPrettyWordsDict(sortedWordsDict[x])
 
+    def addRelatedNames(self, namesFound):
+        #{ name : { name : unique day count } }
+        for keyName in namesFound:
+            for otherName in namesFound:
+                if keyName == otherName:
+                    continue
+                try:
+                    self.relatedNamesDict[keyName]
+                except:
+                    self.relatedNamesDict[keyName] = {}
+                try: 
+                    self.relatedNamesDict[keyName][otherName] += 1
+                except:
+                    self.relatedNamesDict[keyName][otherName] = 1
+
     def readFile(self, url):
         try:
             f = open(url, 'r')
@@ -347,22 +365,27 @@ class WordFrequencies:
             return
 
         newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
-        currentDateStr = None;
-        currentDateObj = None;
+        currentDateStr = None
+        currentDateObj = None
         numWords = 0
+        namesFound = set()
         
         line = f.readline()
         while (line != ''):
             #check a line to see if it's a date, therefore a new day
             res = newdate.match(line)
             if res != None: #date found
+                if namesFound != None:
+                    self.addRelatedNames(namesFound)
+                    namesFound = set()
+
                 if numWords > 0:
                     self.wordCountOfEntriesDict[currentDateObj] = numWords #should be here, since we want it triggered at the end
                 numWords = 0
                 currentDateStr = res.group(0);
                 currentDateStr = Helper.formatDateStringIntoCleanedString(currentDateStr)
                 currentDateObj = Helper.makeDateObject(currentDateStr)
-                assert currentDateObj != None
+
                 if currentDateObj > self.mostRecentDate: #found a higher date than what we've seen so far
                     self.mostRecentDate = currentDateObj
                 if currentDateObj < self.firstDate: #found a lower date than what we have now
@@ -370,8 +393,11 @@ class WordFrequencies:
                 line = line[len(currentDateStr):] #remove date from line, so it's not a word
 
             if currentDateStr != None:
-                numWords += self.addLine(line, currentDateObj)
-                self.guessNames(line)
+                (wordsFound, namesFoundThisLine) = self.addLine(line, currentDateObj)
+                for name in namesFoundThisLine:
+                    namesFound.add(name)
+                numWords += wordsFound
+                # self.guessNames(line)
             line = f.readline()
 
         #need to capture the last date for the entry length
@@ -433,6 +459,8 @@ class WordFrequencies:
     def main(self, fileurl):
         self.makeNamesSet()
         self.readFile(fileurl)
+
+        print self.relatedNamesDict['cheryl']
         
         while True:
             print '''
@@ -482,6 +510,7 @@ enter new path doesn't work if initial one isn't valid
 allow graphing for words and not just names
 
 what names each name is frequently found with 
+    refine to only look at names in the same paragraph maybe?
 
 pretty printing of dates
 
