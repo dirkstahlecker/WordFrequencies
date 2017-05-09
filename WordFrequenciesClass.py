@@ -4,7 +4,7 @@ import os
 import operator
 import argparse
 import matplotlib.pyplot as plt
-from datetime import datetime
+import datetime
 from Helper import Helper
 from Preferences import Preferences
 
@@ -18,6 +18,9 @@ class WordFrequencies:
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
     wordCountOfEntriesDict = {} #{ date : word count }
     guessedNamesSet = set()
+    firstDate = datetime.datetime(datetime.MINYEAR,1,1)
+    lastDate = None;
+
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     prefs = Preferences() #stored the user's preferences for various things
 
@@ -134,7 +137,11 @@ class WordFrequencies:
         #{ word : [ [ date , count ] ] }
         name = args[0]
         try:
-            x = [datetime.strptime(date[0] ,'%m-%d-%y') for date in self.namesToGraphDict[name]]
+            self.namesToGraphDict[name]
+        except:
+            print 'Invalid input - must be a valid name'
+        try:
+            x = [date[0] for date in self.namesToGraphDict[name]]
             y = [count[1] for count in self.namesToGraphDict[name]]
             
             ax = plt.subplot(111)
@@ -143,7 +150,7 @@ class WordFrequencies:
 
             plt.show()
         except:
-            print 'Invalid input - must be a valid name'
+            print 'Unknown error occured while graphing'
 
     def lookupWord(self, args):
         word = args[0]
@@ -157,62 +164,96 @@ class WordFrequencies:
         length = Helper.subtractDates(self.wordsDict[word]['lastDate'], self.wordsDict[word]['firstDate']).days
         print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
-        print 'Percentage of days with a useage: ' + str(float(total_days_used) / total_number_of_days)
+        print 'Percentage of days with a useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%'
 
-    def printAll(self, names):
-        self.printHighest(float('inf'), names)
+    def overallAnalytics(self):
+        print 'Total number of entries: ',
+        print len(self.wordCountOfEntriesDict)
+        print 'First entry: ',
+        print self.firstDate
+        print 'Last entry: ',
+        print self.lastDate
+        #print 'Percentage of days from first to last with an entry: ',
+        print self.firstDate
+        print self.lastDate
+        totalDays = Helper.subtractDates(self.lastDate, self.firstDate) #this is a datetime object
+        print totalDays
+        print type(totalDays)
 
-    def makeOutputPrettyHelper(self, header, word, count, date):
-        if header:
-            print 'Word',
-            print ' ' * (self.WORD_COL_WIDTH - 4),
+    def makeOutputPrettyHelper(self, word, count, date):
+        date = str(date)
+
+        print 'word: ',
+        print word
+        print 'count: ',
+        print count
+        print 'date: ',
+        print date
+
+        if len(word) <= self.WORD_COL_WIDTH:
+            print word,
+            chars_left = self.WORD_COL_WIDTH - len(word)
+            print ' ' * chars_left,
         else:
-            if len(word) <= self.WORD_COL_WIDTH:
-                print word,
-                chars_left = self.WORD_COL_WIDTH - len(word)
-                print ' ' * chars_left,
-            else:
-                print word[:self.WORD_COL_WIDTH],
+            print word[:self.WORD_COL_WIDTH],
 
-        if header:
-            print 'Count',
-            print ' ' * (self.NUM_COL_WIDTH - 5),
-        else:
-            #TODO: deal with overshoot on numbers and date
-            print count,
-            print ' ' * (self.NUM_COL_WIDTH - len(str(count))),
 
-        if header:
-            print 'Last Occurence',
-        else:
+        #TODO: deal with overshoot on numbers and date
+        print count,
+        print ' ' * (self.NUM_COL_WIDTH - len(str(count))),
+
+        if date != None:
             print date,
-        print ' ' * (self.DATE_COL_WIDTH - len(date))
+            print ' ' * (self.DATE_COL_WIDTH - len(str(date)))
+        else:
+            print ''
 
-        if header:
-            print '-'*(38) #WORD_COL_WIDTH + NUM_COL_WIDTH + DATE_COL_WIDTH
-            #TODO: make this a variable rather than a hardcoded number (and figure out why the variable width is off by 4)
+    def makePrettyHeader(self, col1name, col2name = '', col3name = ''):
+        print col1name,
+        print ' ' * (self.WORD_COL_WIDTH - 4),
+        print col2name,
+        print ' ' * (self.NUM_COL_WIDTH - 5),
+        print col3name
+        print '-'*(self.WORD_COL_WIDTH + self.NUM_COL_WIDTH + self.DATE_COL_WIDTH) #38
+        #TODO: make this a variable rather than a hardcoded number (and figure out why the variable width is off by 4)
+
 
     def makeOutputPretty(self, inp): #( word : ( count , last occurence ) )
         word = inp[0]
         count = inp[1][0]
-        date = inp[1][1]
-        self.makeOutputPrettyHelper(False, word, count, date)
+        date = str(inp[1][1])
+        self.makeOutputPrettyHelper(word, count, date)
+
+    def makeOutputPrettyLength(self, inp): #{ date : word count }
+        # self.makeOutputPrettyHelper(None, inp[1], inp[0])
+        date = str(inp[0])
+        count = inp[1]
+
+        if len(date) <= self.WORD_COL_WIDTH:
+            print date,
+            chars_left = self.WORD_COL_WIDTH - len(date)
+            print ' ' * chars_left,
+        else:
+            print date[:self.WORD_COL_WIDTH],
+
+        #TODO: deal with overshoot on numbers and date
+        print count,
+        print ' ' * (self.NUM_COL_WIDTH - len(str(count)))
+
+
 
     #inp comes in as a tuple due to the sorting and the fact that dicts can't be sorted
     def makeOutputPrettyWPD(self, inp): #( word : { 'count': count, 'lastOccurence': last occurence } )
         word = inp[0]
         count = inp[1]['count']
         date = inp[1]['lastOccurence']
-        self.makeOutputPrettyHelper(False, word, count, date)
+        self.makeOutputPrettyHelper(word, count, date)
 
     def makeOutputPrettyWordsDict(self, inp): #( word : { 'count': count, 'lastDate': last occurence, 'firstDate': first occurence } )
         word = inp[0]
         count = inp[1]['count']
         date = inp[1]['lastDate']
-        self.makeOutputPrettyHelper(False, word, count, date)
-
-    def makePrettyHeader(self):
-        self.makeOutputPrettyHelper(True, '', '', '')
+        self.makeOutputPrettyHelper(word, count, date)
         
     #print the x most occuring words
     #num: number to print. if 'all', prints all
@@ -245,18 +286,19 @@ class WordFrequencies:
 
         #TODO: add headers to all cases
         if option == 'names':
-            self.sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
-            self.sortedNamesDict.reverse()
-            end_num = min(end_num, len(self.sortedNamesDict))
-            self.makePrettyHeader()
+            sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
+            sortedNamesDict.reverse()
+            end_num = min(end_num, len(sortedNamesDict))
+            self.makePrettyHeader('Word', 'Count', 'Last Occurence')
             for x in xrange(start_num, end_num):
-                self.makeOutputPretty(self.sortedNamesDict[x])
+                self.makeOutputPretty(sortedNamesDict[x])
         elif option == 'wordsPerDay':
-            self.sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
-            self.sortedWordsPerDayDict.reverse()
-            end_num = min(end_num, len(self.sortedWordsPerDayDict))
+            sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
+            sortedWordsPerDayDict.reverse()
+            end_num = min(end_num, len(sortedWordsPerDayDict))
+            self.makePrettyHeader('Word', 'Count', 'Last Occurence')
             for x in xrange(start_num, end_num):
-                self.makeOutputPrettyWPD(self.sortedWordsPerDayDict[x])
+                self.makeOutputPrettyWPD(sortedWordsPerDayDict[x])
         elif option == 'namesPerDay':
             sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
             sortedNamesPerDayDict.reverse()
@@ -267,13 +309,16 @@ class WordFrequencies:
             sortedLengthOfEntriesDict = sorted(self.wordCountOfEntriesDict.items(), key=operator.itemgetter(1))
             sortedLengthOfEntriesDict.reverse()
             end_num = min(end_num, len(sortedLengthOfEntriesDict))
-            # for x in xrange(start_num, )
-        else: #regular words
-            self.sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
-            self.sortedWordsDict.reverse()
-            end_num = min(end_num, len(self.sortedWordsDict))
+            self.makePrettyHeader('Date', 'Count')
             for x in xrange(start_num, end_num):
-                self.makeOutputPrettyWordsDict(self.sortedWordsDict[x])
+                self.makeOutputPrettyLength(sortedLengthOfEntriesDict[x])
+        else: #regular words
+            self.makePrettyHeader('Word', 'Count', 'Last Occurence')
+            sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
+            sortedWordsDict.reverse()
+            end_num = min(end_num, len(sortedWordsDict))
+            for x in xrange(start_num, end_num):
+                self.makeOutputPrettyWordsDict(sortedWordsDict[x])
 
     def readFile(self, url):
         try:
@@ -285,7 +330,8 @@ class WordFrequencies:
             return
 
         newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
-        currentDate = None;
+        currentDateStr = None;
+        currentDateObj = None;
         numWords = 0
         
         line = f.readline()
@@ -294,25 +340,31 @@ class WordFrequencies:
             res = newdate.match(line)
             if res != None: #date found
                 if numWords > 0:
-                    self.wordCountOfEntriesDict[currentDate] = numWords #should be here, since we want it triggered at the end
+                    self.wordCountOfEntriesDict[currentDateObj] = numWords #should be here, since we want it triggered at the end
                 numWords = 0
-                currentDate = res.group(0);
-                currentDate = Helper.formatDate(currentDate)
-                line = line[len(currentDate):] #remove date from line, so it's not a word
+                currentDateStr = res.group(0);
+                currentDateStr = Helper.formatDateStringIntoCleanedString(currentDateStr)
+                currentDateObj = Helper.makeDateObject(currentDateStr)
+                assert currentDateObj != None
+                if Helper.compareDates(currentDateObj, self.lastDate) == 1: #current date is greater
+                    self.lastDate = currentDateObj
+                if Helper.compareDates(self.firstDate, currentDateObj) == 1: #current date is less than first date
+                    self.firstDate = currentDateObj
 
-            if currentDate != None:
-                numWords += self.addLine(line, currentDate)
+                line = line[len(currentDateStr):] #remove date from line, so it's not a word
+
+            if currentDateStr != None:
+                numWords += self.addLine(line, currentDateObj)
                 self.guessNames(line)
             line = f.readline()
 
         #need to capture the last date for the entry length
-        self.wordCountOfEntriesDict[currentDate] = numWords 
+        self.wordCountOfEntriesDict[currentDateObj] = numWords 
         f.close()
 
     #args is a list of arguments in order
     def callInputFunction(self, inp, args):
         if inp == 'highest':
-            print self.wordCountOfEntriesDict
             self.printHighest(args, None)
         elif inp == 'lookup':
             self.lookupWord(args)
@@ -320,8 +372,8 @@ class WordFrequencies:
             self.printHighest(args, 'names')
         elif inp == 'graph':
             self.graphAnalytics(args)
-        elif inp == 'gpd':
-            self.graphAnalyticsPerDay(args)
+        # elif inp == 'gpd':
+        #     self.graphAnalyticsPerDay(args)
         elif inp == 'wpd':
             self.printHighest(args, 'wordsPerDay')
         elif inp == 'npd':
@@ -332,6 +384,8 @@ class WordFrequencies:
             pass
         elif inp == 'length':
             self.printHighest(args, 'length')
+        elif inp == 'overall':
+            self.overallAnalytics()
         elif inp == 'exit':
             return False
         else:
@@ -352,7 +406,7 @@ class WordFrequencies:
 
     def parseInput(self, inpStr):
         parts = inpStr.split()
-        command = parts[0]
+        command = parts[0].lower().strip().lstrip()
         args = parts[1:]
         if (self.prefs.VERBOSE):
             print 'Parsed arguments: command: ' + str(command) + ' args: ' + str(args)
@@ -371,10 +425,10 @@ class WordFrequencies:
     Highest x names             names [num | all]
     Highest x names per day     npd [num | all]
     Graph names                 graph [name]
-    Graph names per day         gpd [name]
     Add name                    add name [name]
     Set Options                 option [option_name] [value]
     Length                      length [num | all]
+    Overall analytics           overall
     Exit                        exit
     '''
             if not self.parseInput(raw_input('>')):
@@ -407,5 +461,17 @@ flag to ignore trailing s and then combine both "word" and "words" into same
 enter new path doesn't work if initial one isn't valid
 
 allow graphing for words and not just names
+
+general analytics 
+    total number of entries 
+    percentage of total days with an entry 
+
+what names each name is frequently found with 
+
+pretty printing of dates
+
+
+Bugs:
+fix axes on graphing
 
 '''

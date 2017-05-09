@@ -18,23 +18,48 @@ class Helper:
         return word
 
     @staticmethod
-    def splitDate(date):
-        split1 = date.find('-')
-        split2 = date.find('-',split1)
+    def makeDateObject(dateStr):
+        # print dateStr
+        split1 = dateStr.find('-')
+        split2 = dateStr.find('-',split1)
         split2 = split2 + split1 + 1
-        return (int(date[:split1]), int(date[split1+1:split2]), int(date[split2+1:]))
+
+        month = int(dateStr[:split1])
+        day = int(dateStr[split1+1:split2])
+        year = int(dateStr[split2+1:])
+        # print 'year: ',
+        # print year
+        # print 'month: ',
+        # print month
+        # print 'day: ',
+        # print day
+
+        return datetime(year=year, month=month, day=day)
 
     #returns date1 - date2 in date format
     @staticmethod
     def subtractDates(date1, date2): 
-        split1 = Helper.splitDate(date1)
-        date1 = datetime(year=split1[2], day=split1[1], month=split1[0])
-
-        split2 = Helper.splitDate(date2)
-        date2 = datetime(year=split2[2], day=split2[1], month=split2[0])
-
+        # print 'date1: ',
+        # print date1
+        # print 'date2: ',
+        # print date2
+        # print type(date1)
+        # print type(date2)
         diff = date1 - date2
         return diff
+
+    @staticmethod
+    def compareDates(date1, date2):
+        #TODO: last can be None
+        if date2 == None:
+            return 1
+
+        #TODO: this method is unnecessary once all dates are datetime objects
+        if date1 > date2:
+            return 1
+        elif date1 < date2:
+            return -1
+        return 0
 
     @staticmethod
     def valid(word):
@@ -47,8 +72,8 @@ class Helper:
 
     #Put date into a format that can be recognized by datetime
     @staticmethod
-    def formatDate(date_in):
-        date = date_in.strip().lstrip();
+    def formatDateStringIntoCleanedString(dateStr):
+        date = dateStr.strip().lstrip();
 
         #currently assume they're fairly correctly formatted
         #won't get in here in the first place if they're not
