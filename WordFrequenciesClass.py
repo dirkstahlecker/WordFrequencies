@@ -202,14 +202,6 @@ class WordFrequencies:
 
     def makeOutputPrettyHelper(self, word, count, date):
         date = str(date)
-
-        print 'word: ',
-        print word
-        print 'count: ',
-        print count
-        print 'date: ',
-        print date
-
         if len(word) <= self.WORD_COL_WIDTH:
             print word,
             chars_left = self.WORD_COL_WIDTH - len(word)
@@ -217,12 +209,11 @@ class WordFrequencies:
         else:
             print word[:self.WORD_COL_WIDTH],
 
-
         #TODO: deal with overshoot on numbers and date
         print count,
         print ' ' * (self.NUM_COL_WIDTH - len(str(count))),
 
-        if date != None:
+        if date != 'None': #hack due to conversion earlier
             print date,
             print ' ' * (self.DATE_COL_WIDTH - len(str(date)))
         else:
@@ -244,6 +235,11 @@ class WordFrequencies:
         date = str(inp[1][1])
         self.makeOutputPrettyHelper(word, count, date)
 
+    def makeOutputPrettyRelated(self, inp): #( name , count )
+        name = inp[0]
+        count = inp[1]
+        self.makeOutputPrettyHelper(name, count, None)
+
     def makeOutputPrettyLength(self, inp): #{ date : word count }
         # self.makeOutputPrettyHelper(None, inp[1], inp[0])
         date = str(inp[0])
@@ -259,8 +255,6 @@ class WordFrequencies:
         #TODO: deal with overshoot on numbers and date
         print count,
         print ' ' * (self.NUM_COL_WIDTH - len(str(count)))
-
-
 
     #inp comes in as a tuple due to the sorting and the fact that dicts can't be sorted
     def makeOutputPrettyWPD(self, inp): #( word : { 'count': count, 'lastOccurence': last occurence } )
@@ -278,23 +272,41 @@ class WordFrequencies:
     #print the x most occuring words
     #num: number to print. if 'all', prints all
     def printHighest(self, args, option):
+        if self.prefs.VERBOSE:
+            print 'args: ',
+            print args
+            print 'option: ',
+            print option
+
+        if option == 'namesRelated':
+            nameForRelated = args[0]
+            args = args[1:]
+
         start_num = 0
         end_num = 0
+        index1 = 0#1 if option == 'namesRelated' else 0
+        index2 = 1#2 if option == 'namesRelated' else 1
+        if self.prefs.VERBOSE:
+            print 'index1: ',
+            print index1
+            print 'index2: ',
+            print index2
+
         if len(args) == 1: #only an end num
             try:
-                if (args[0] == 'all'):
+                if (args[index1] == 'all'):
                     end_num = float('inf')
                 else:
-                    end_num = int(args[0])
+                    end_num = int(args[index1])
             except:
                 print 'Invalid arguments'
         elif len(args) >= 2: #start and end
             try:
-                start_num = int(args[0])
-                if (args[1] == 'all'):
+                start_num = int(args[index1])
+                if (args[index2] == 'all'):
                     end_num = float('inf')
                 else:
-                    end_num = int(args[1])
+                    end_num = int(args[index2])
             except:
                 print 'Invalid arguments'
 
@@ -312,6 +324,15 @@ class WordFrequencies:
             self.makePrettyHeader('Word', 'Count', 'Last Occurence')
             for x in xrange(start_num, end_num):
                 self.makeOutputPretty(sortedNamesDict[x])
+        elif option == 'namesRelated':
+            #TODO: deal with 'all' here, since it won't be caught earlier
+            sortedRelatedNamesDict = sorted(self.relatedNamesDict[nameForRelated].items(), key=operator.itemgetter(1))
+            sortedRelatedNamesDict.reverse()
+            print 'Related names for ' + nameForRelated + ':'
+            print '\n'
+            self.makePrettyHeader('Name', 'Count')
+            for x in xrange(start_num, end_num):
+                self.makeOutputPrettyRelated(sortedRelatedNamesDict[x])
         elif option == 'wordsPerDay':
             sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
             sortedWordsPerDayDict.reverse()
@@ -412,6 +433,8 @@ class WordFrequencies:
             self.lookupWord(args)
         elif inp == 'names':
             self.printHighest(args, 'names')
+        elif inp == 'related':
+            self.printHighest(args, 'namesRelated')
         elif inp == 'graph':
             self.graphAnalytics(args)
         elif inp == 'graphentries':
@@ -459,8 +482,6 @@ class WordFrequencies:
     def main(self, fileurl):
         self.makeNamesSet()
         self.readFile(fileurl)
-
-        print self.relatedNamesDict['cheryl']
         
         while True:
             print '''
@@ -469,6 +490,7 @@ class WordFrequencies:
     Highest x words per day     wpd [num | all]
     Lookup                      lookup [word]
     Highest x names             names [num | all]
+    Related Names               related [name] [num | all]
     Highest x names per day     npd [num | all]
     Graph names                 graph [name]
     Graph entries               graphentries
@@ -515,6 +537,8 @@ what names each name is frequently found with
 pretty printing of dates
 
 figure out how to deal with "[date] through [date]:"
+
+use constants for strings
 
 
 Bugs:
