@@ -80,6 +80,13 @@ class WordFrequencies:
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
         namesFound = set()
         for word in words:
+
+            if self.prefs.COMBINE_PLURALS:
+                if word.endswith("'s"):
+                    word = word[:len(word)-2]
+                #stripping plural s is easy for names, as we assume there isn't another word that is the name plus the trailing s
+                #but for arbitrary words its hard (e.g. "was" or "is")
+
             wasUpper = False;
             if word[:1].isupper():
                 wasUpper = True;
@@ -164,8 +171,6 @@ class WordFrequencies:
         x = [i[0] for i in sortedLengthOfEntriesDict]
         y = [1 for j in sortedLengthOfEntriesDict]
 
-        print x
-
         ax = plt.subplot(111)
         ax.bar(x, y, width=2)
         ax.xaxis_date()
@@ -226,8 +231,6 @@ class WordFrequencies:
         print ' ' * (self.NUM_COL_WIDTH - 5),
         print col3name
         print '-'*(self.WORD_COL_WIDTH + self.NUM_COL_WIDTH + self.DATE_COL_WIDTH) #38
-        #TODO: make this a variable rather than a hardcoded number (and figure out why the variable width is off by 4)
-
 
     def makeOutputPretty(self, inp): #( word : ( count , last occurence ) )
         word = inp[0]
@@ -284,8 +287,8 @@ class WordFrequencies:
 
         start_num = 0
         end_num = 0
-        index1 = 0#1 if option == 'namesRelated' else 0
-        index2 = 1#2 if option == 'namesRelated' else 1
+        index1 = 0
+        index2 = 1
         if self.prefs.VERBOSE:
             print 'index1: ',
             print index1
@@ -328,8 +331,7 @@ class WordFrequencies:
             #TODO: deal with 'all' here, since it won't be caught earlier
             sortedRelatedNamesDict = sorted(self.relatedNamesDict[nameForRelated].items(), key=operator.itemgetter(1))
             sortedRelatedNamesDict.reverse()
-            print 'Related names for ' + nameForRelated + ':'
-            print '\n'
+            print 'Related names for ' + nameForRelated + ':\n'
             self.makePrettyHeader('Name', 'Count')
             for x in xrange(start_num, end_num):
                 self.makeOutputPrettyRelated(sortedRelatedNamesDict[x])
@@ -479,7 +481,14 @@ class WordFrequencies:
             print 'Parsed arguments: command: ' + str(command) + ' args: ' + str(args)
         return self.callInputFunction(command, args)
 
-    def main(self, fileurl):
+    def main(self, args):
+        fileurl = args.file
+
+        if args.verbosity:
+            self.prefs.VERBOSE = True
+        if args.combineplurals:
+            self.prefs.COMBINE_PLURALS = True
+
         self.makeNamesSet()
         self.readFile(fileurl)
         
@@ -503,15 +512,18 @@ class WordFrequencies:
             if not self.parseInput(raw_input('>')):
                 return
 
+
+#Options need to be set on startup
 if __name__ == '__main__':
     wf = WordFrequencies()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("file", help="Path to file to examine")
-    #parser.add_argument('-v', '--verbose', help="Enable verbose output", action="enableVerbosity()")
+    parser.add_argument('file', help='Path to file to examine')
+    parser.add_argument('-v', '--verbosity', action='store_true', help='Enable verbose output')
+    parser.add_argument('-p', '--combineplurals', action='store_true', help='Combine plurals')
     args = parser.parse_args()
 
-    wf.main(args.file)
+    wf.main(args)
 
 
 
@@ -539,6 +551,8 @@ pretty printing of dates
 figure out how to deal with "[date] through [date]:"
 
 use constants for strings
+
+figure out what to do with multiple people of the same name
 
 
 Bugs:
