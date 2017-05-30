@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import datetime
 from Helper import Helper
 from Preferences import Preferences
+import locale
 
 class WordFrequencies:
     namesSet = set()
@@ -18,6 +19,7 @@ class WordFrequencies:
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
     wordCountOfEntriesDict = {} #{ date : word count }
     relatedNamesDict = {} #{ name : { name : unique day count } }
+    totalNumberOfWords = 0
 
     guessedNamesSet = set()
     firstDate = datetime.datetime(datetime.MAXYEAR,12,31)
@@ -170,12 +172,18 @@ class WordFrequencies:
         sortedLengthOfEntriesDict = sorted(self.wordCountOfEntriesDict.items(), key=operator.itemgetter(1))
         x = [i[0] for i in sortedLengthOfEntriesDict]
         y = [1 for j in sortedLengthOfEntriesDict]
+        self.graphHelper(x, y)
 
+    def graphHelper(self, x, y):
         ax = plt.subplot(111)
         ax.bar(x, y, width=2)
         ax.xaxis_date()
-
         plt.show()
+
+    def graphNameValue(self, in_dict):
+        x = in_dict.keys()
+        y = in_dict.values()
+        self.graphHelper(x, y)
 
     def lookupWord(self, args):
         word = args[0]
@@ -195,18 +203,35 @@ class WordFrequencies:
         print 'Total number of entries: ',
         print len(self.wordCountOfEntriesDict)
         print 'First entry: ',
-        print self.firstDate
+        print Helper.prettyPrintDate(self.firstDate)
         print 'Last entry: ',
-        print self.mostRecentDate
+        print Helper.prettyPrintDate(self.mostRecentDate)
         print 'Total days from first to last entry: ',
         totalDays = self.mostRecentDate - self.firstDate #this is correct
         days = totalDays.days
         print days
         print 'Percentage of days from first to last with an entry: ',
         print str(round(float(len(self.wordCountOfEntriesDict)) / days * 100, 2)) + '%'
+        print 'Average length per entry: ',
+        numberOfEntries = len(self.wordCountOfEntriesDict)
+        sumOfLengths = 0
+        longestEntryLength = 0
+        for date in self.wordCountOfEntriesDict.keys():
+            length = self.wordCountOfEntriesDict[date]
+            if length > longestEntryLength:
+                longestEntryLength = length
+                longestEntryDate = date
+            sumOfLengths += length 
+        print round(float(sumOfLengths) / numberOfEntries, 2)
+        print 'Longest entry: ' + str(longestEntryLength) + ' words on ',
+        print Helper.prettyPrintDate(longestEntryDate)
+        print 'Total number of words written: ',
+        print locale.format("%d", self.totalNumberOfWords, grouping=True)
 
+
+    #date is a datetime object
     def makeOutputPrettyHelper(self, word, count, date):
-        date = str(date)
+        date = Helper.prettyPrintDate(date)
         if len(word) <= self.WORD_COL_WIDTH:
             print word,
             chars_left = self.WORD_COL_WIDTH - len(word)
@@ -235,7 +260,7 @@ class WordFrequencies:
     def makeOutputPretty(self, inp): #( word : ( count , last occurence ) )
         word = inp[0]
         count = inp[1][0]
-        date = str(inp[1][1])
+        date = inp[1][1]
         self.makeOutputPrettyHelper(word, count, date)
 
     def makeOutputPrettyRelated(self, inp): #( name , count )
@@ -245,7 +270,7 @@ class WordFrequencies:
 
     def makeOutputPrettyLength(self, inp): #{ date : word count }
         # self.makeOutputPrettyHelper(None, inp[1], inp[0])
-        date = str(inp[0])
+        date = Helper.prettyPrintDate(inp[0])
         count = inp[1]
 
         if len(date) <= self.WORD_COL_WIDTH:
@@ -346,6 +371,7 @@ class WordFrequencies:
             sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
             sortedNamesPerDayDict.reverse()
             end_num = min(end_num, len(sortedNamesPerDayDict))
+            self.makePrettyHeader('Name', 'Count', 'Last Occurence')
             for x in xrange(start_num, end_num):
                 self.makeOutputPretty(sortedNamesPerDayDict[x])
         elif option == 'length':
@@ -392,6 +418,7 @@ class WordFrequencies:
         currentDateObj = None
         numWords = 0
         namesFound = set()
+        totalWordNum = 0
         
         line = f.readline()
         while (line != ''):
@@ -404,8 +431,9 @@ class WordFrequencies:
 
                 if numWords > 0:
                     self.wordCountOfEntriesDict[currentDateObj] = numWords #should be here, since we want it triggered at the end
+                totalWordNum += numWords
                 numWords = 0
-                currentDateStr = res.group(0);
+                currentDateStr = res.group(0)
                 currentDateStr = Helper.formatDateStringIntoCleanedString(currentDateStr)
                 currentDateObj = Helper.makeDateObject(currentDateStr)
 
@@ -425,6 +453,7 @@ class WordFrequencies:
 
         #need to capture the last date for the entry length
         self.wordCountOfEntriesDict[currentDateObj] = numWords 
+        self.totalNumberOfWords = totalWordNum
         f.close()
 
     #args is a list of arguments in order
@@ -453,6 +482,8 @@ class WordFrequencies:
             pass
         elif inp == 'length':
             self.printHighest(args, 'length')
+        elif inp == 'graphlength':
+            self.graphNameValue(self.wordCountOfEntriesDict)
         elif inp == 'overall':
             self.overallAnalytics()
         elif inp == 'exit':
@@ -470,7 +501,7 @@ class WordFrequencies:
         self.namesSet.clear()
         line = f.readline()
         while line != '':
-            self.namesSet.add(line.strip().lower())
+            self.namesSet.add(line.strip().lower()) #TODO: does this do anything? What?
             line = f.readline()
 
     def parseInput(self, inpStr):
@@ -482,6 +513,7 @@ class WordFrequencies:
         return self.callInputFunction(command, args)
 
     def main(self, args):
+        locale.setlocale(locale.LC_ALL, 'en_US')
         fileurl = args.file
 
         if args.verbosity:
@@ -503,6 +535,7 @@ class WordFrequencies:
     Highest x names per day     npd [num | all]
     Graph names                 graph [name]
     Graph entries               graphentries
+    Graph length                graphlength
     Add name                    add name [name]
     Set Options                 option [option_name] [value]
     Length                      length [num | all]
@@ -553,6 +586,11 @@ figure out how to deal with "[date] through [date]:"
 use constants for strings
 
 figure out what to do with multiple people of the same name
+
+for overall:
+    total number of words written
+
+have a reverse order flag of some sort (allow to view in ascending order rather than descending)
 
 
 Bugs:

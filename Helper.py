@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+import locale
 
 class Helper:
     @staticmethod
@@ -26,6 +27,9 @@ class Helper:
         month = int(dateStr[:split1])
         day = int(dateStr[split1+1:split2])
         year = int(dateStr[split2+1:])
+        #convert year into four digits
+        if year < 1000:
+            year = year + 2000
 
         return datetime(year=year, month=month, day=day)
 
@@ -50,4 +54,8 @@ class Helper:
         if re.search('-[0-9]-', date):
             date = date[:3] + '0' + date[3:]
         return date
+
+    @staticmethod
+    def prettyPrintDate(date):
+        return date.strftime('%m-%d-%Y')
 
