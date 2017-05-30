@@ -154,6 +154,7 @@ class WordFrequencies:
             self.namesToGraphDict[name]
         except:
             print 'Invalid input - must be a valid name'
+            return
         try:
             x = [date[0] for date in self.namesToGraphDict[name]]
             y = [count[1] for count in self.namesToGraphDict[name]]
@@ -187,6 +188,11 @@ class WordFrequencies:
 
     def lookupWord(self, args):
         word = args[0]
+        try:
+            self.wordsDict[word]
+        except:
+            print 'Invalid word'
+            return
         print word + ': '
         print 'First usage: ' + str(self.wordsDict[word]['firstDate'])
         print 'Last usage: ' + str(self.wordsDict[word]['lastDate'])
@@ -328,6 +334,7 @@ class WordFrequencies:
                     end_num = int(args[index1])
             except:
                 print 'Invalid arguments'
+                return
         elif len(args) >= 2: #start and end
             try:
                 start_num = int(args[index1])
@@ -337,6 +344,7 @@ class WordFrequencies:
                     end_num = int(args[index2])
             except:
                 print 'Invalid arguments'
+                return
 
         if self.prefs.VERBOSE:
             print 'start_num: ',
@@ -579,16 +587,11 @@ allow graphing for words and not just names
 what names each name is frequently found with 
     refine to only look at names in the same paragraph maybe?
 
-pretty printing of dates
-
 figure out how to deal with "[date] through [date]:"
 
 use constants for strings
 
 figure out what to do with multiple people of the same name
-
-for overall:
-    total number of words written
 
 have a reverse order flag of some sort (allow to view in ascending order rather than descending)
 
