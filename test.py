@@ -16,7 +16,6 @@ class Capturing(list):
         sys.stdout = self._stdout
  
 class TestUM(unittest.TestCase):
-
     wf = None
  
     @classmethod
@@ -27,11 +26,14 @@ class TestUM(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        self.wf.cleanUpEverything()
-        self.wf = None
+        pass
 
-    def test_namesURL(self):
+    def test_classVariables(self):
+        self.assertEqual(self.wf.firstDate, datetime(2014,12,1))
+        self.assertEqual(self.wf.mostRecentDate, datetime(2017,12,31))
         self.assertEqual(self.wf.namesURL, "/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/names.txt")
+        self.assertEqual(self.wf.totalNumberOfWords, 51)
+
 
     def test_journalParsing(self):
         self.assertEqual(len(self.wf.wordCountOfEntriesDict), 7)
@@ -75,6 +77,12 @@ class TestUM(unittest.TestCase):
             'five                  2       02-05-2017 '])
         self.assertEqual(str(output2), expected)
 
+        with Capturing() as output3:
+            self.wf.printHighest(['3'], None)
+        expected = str(['Word                  Count   Last Occurence', '----------------------------------', 
+            'day                   9       02-05-2017 ', 'sentence              8       02-05-2017 ', 'one                   6       02-05-2017 '])
+        self.assertEqual(str(output3), expected)
+
     def test_relatedNamesDict(self):
         self.assertEqual(len(self.wf.relatedNamesDict), 3) #total number of names
         self.assertEqual(self.wf.relatedNamesDict['cheryl']['laura'], 2)
@@ -90,6 +98,7 @@ class TestUM(unittest.TestCase):
         self.assertEqual(str(output), expected)
 
 
+    #TODO: re-enable
     # def test_overall(self):
     #     with Capturing() as output:
     #         self.wf.overallAnalytics()

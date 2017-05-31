@@ -462,7 +462,7 @@ class WordFrequencies:
 
         #need to capture the last date for the entry length
         self.wordCountOfEntriesDict[currentDateObj] = numWords 
-        self.totalNumberOfWords = totalWordNum
+        self.totalNumberOfWords = totalWordNum + numWords #need to get words from last line
         f.close()
 
     #args is a list of arguments in order
@@ -544,29 +544,6 @@ class WordFrequencies:
             if not self.parseInput(raw_input('>')):
                 return
 
-    def cleanUpEverything(self): #TODO: rethink this
-        self.namesSet = set()
-        self.wordsDict = {}
-        self.namesDict = {}
-        self.wordsPerDayDict = {}
-        self.namesPerDayDict = {}
-        self.namesToGraphDict = {}
-        self.namesToGraphDictUniqueOccurences = {}
-        self.wordCountOfEntriesDict = {}
-        self.relatedNamesDict = {}
-        self.totalNumberOfWords = 0
-
-        self.guessedNamesSet = set()
-        self.firstDate = datetime.datetime(datetime.MAXYEAR,12,31)
-        self.mostRecentDate = datetime.datetime(datetime.MINYEAR,1,1)
-
-        self.namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
-        self.prefs = Preferences()
-
-        self.WORD_COL_WIDTH = 20
-        self.NUM_COL_WIDTH = 6
-        self.DATE_COL_WIDTH = 8
-
     #break apart the main function for testing
     def mainSetup(self, args):
         locale.setlocale(locale.LC_ALL, 'en_US')
@@ -596,8 +573,6 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbosity', action='store_true', help='Enable verbose output')
     parser.add_argument('-p', '--combineplurals', action='store_true', help='Combine plurals')
     args = parser.parse_args()
-    print args
-    print type(args)
 
     wf.main(args)
 
