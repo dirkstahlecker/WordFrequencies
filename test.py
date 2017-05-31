@@ -39,8 +39,6 @@ class TestUM(unittest.TestCase):
         self.assertEqual(len(self.wf.namesDict), 3)
 
     def test_wordsDict(self):
-        # for key, value in self.wf.wordsDict.iteritems() :
-        #     print key
         self.assertEqual(len(self.wf.wordsDict), 17) #total number of words
         self.assertEqual(self.wf.wordsDict['day']['count'], 9) #word count
         #dates
@@ -58,14 +56,47 @@ class TestUM(unittest.TestCase):
         self.assertEqual(len(self.wf.wordCountOfEntriesDict), 7) #number of entries
         self.assertEqual(self.wf.wordCountOfEntriesDict[datetime(2017,1,5)], 14) #count
 
-
-    def test_overall(self):
+    def test_printHighest(self):
         with Capturing() as output:
-            self.wf.overallAnalytics()
-        expected = str(['Total number of entries:  7', 'First entry:  12-01-2014', 'Last entry:  12-31-2017', 'Total days from first to last entry:  1126', 
-            'Percentage of days from first to last with an entry:  0.62%', 'Average length per entry:  7.29', 'Longest entry: 14 words on  01-05-2017', 
-            'Total number of words written:  51'])
+            self.wf.printHighest(['all'], None)
+        expected = str(['Word                  Count   Last Occurence', '----------------------------------', 
+            'day                   9       02-05-2017 ', 'sentence              8       02-05-2017 ', 'one                   6       02-05-2017 ', 
+            'two                   5       02-05-2017 ', 'cheryl                4       01-05-2017 ', 'dirk                  3       01-05-2017 ', 
+            'five                  2       02-05-2017 ', 'skipping              2       02-05-2017 ', 'laura                 2       01-05-2017 ', 
+            'four                  2       01-05-2017 ', 'a                     2       02-05-2017 ', 'month                 1       02-05-2017 ', 
+            'another               1       12-01-2014 ', 'three                 1       01-03-2017 ', 'testing               1       12-31-2017 ', 
+            'date                  1       12-01-2014 ', 'dates                 1       12-31-2017 '])
         self.assertEqual(str(output), expected)
+
+        with Capturing() as output2:
+            self.wf.printHighest(['2', '7'], None)
+        expected = str(['Word                  Count   Last Occurence', '----------------------------------', 'one                   6       02-05-2017 ', 
+            'two                   5       02-05-2017 ', 'cheryl                4       01-05-2017 ', 'dirk                  3       01-05-2017 ', 
+            'five                  2       02-05-2017 '])
+        self.assertEqual(str(output2), expected)
+
+    def test_relatedNamesDict(self):
+        self.assertEqual(len(self.wf.relatedNamesDict), 3) #total number of names
+        self.assertEqual(self.wf.relatedNamesDict['cheryl']['laura'], 2)
+        self.assertEqual(self.wf.relatedNamesDict['cheryl']['dirk'], 3)
+        self.assertEqual(self.wf.relatedNamesDict['laura']['cheryl'], 2)
+        self.assertEqual(self.wf.relatedNamesDict['laura']['dirk'], 1)
+
+    def test_printRelatedNames(self):
+        with Capturing() as output:
+            self.wf.printHighest(['cheryl', 'all'], 'namesRelated')
+        expected = str(['Related names for cheryl:', '', 'Name                  Count   ', '----------------------------------', 
+            'dirk                  3       ', 'laura                 2       '])
+        self.assertEqual(str(output), expected)
+
+
+    # def test_overall(self):
+    #     with Capturing() as output:
+    #         self.wf.overallAnalytics()
+    #     expected = str(['Total number of entries:  7', 'First entry:  12-01-2014', 'Last entry:  12-31-2017', 'Total days from first to last entry:  1126', 
+    #         'Percentage of days from first to last with an entry:  0.62%', 'Average length per entry:  7.29', 'Longest entry: 14 words on  01-05-2017', 
+    #         'Total number of words written:  51'])
+    #     self.assertEqual(str(output), expected)
 
 
 if __name__ == '__main__':

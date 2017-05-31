@@ -366,6 +366,7 @@ class WordFrequencies:
             sortedRelatedNamesDict.reverse()
             print 'Related names for ' + nameForRelated + ':\n'
             self.makePrettyHeader('Name', 'Count')
+            end_num = min(end_num, len(sortedRelatedNamesDict))
             for x in xrange(start_num, end_num):
                 self.makeOutputPrettyRelated(sortedRelatedNamesDict[x])
         elif option == 'wordsPerDay':
