@@ -237,7 +237,6 @@ class WordFrequencies:
 
     #date is a datetime object
     def makeOutputPrettyHelper(self, word, count, date):
-        date = Helper.prettyPrintDate(date)
         if len(word) <= self.WORD_COL_WIDTH:
             print word,
             chars_left = self.WORD_COL_WIDTH - len(word)
@@ -249,7 +248,8 @@ class WordFrequencies:
         print count,
         print ' ' * (self.NUM_COL_WIDTH - len(str(count))),
 
-        if date != 'None': #hack due to conversion earlier
+        if date != None:
+            date = Helper.prettyPrintDate(date)
             print date,
             print ' ' * (self.DATE_COL_WIDTH - len(str(date)))
         else:
@@ -276,7 +276,7 @@ class WordFrequencies:
 
     def makeOutputPrettyLength(self, inp): #{ date : word count }
         # self.makeOutputPrettyHelper(None, inp[1], inp[0])
-        date = Helper.prettyPrintDate(inp[0])
+        date = inp[0]
         count = inp[1]
 
         if len(date) <= self.WORD_COL_WIDTH:
@@ -315,16 +315,16 @@ class WordFrequencies:
         if option == 'namesRelated':
             nameForRelated = args[0]
             args = args[1:]
+            if len(args) < 1:
+                print 'Too few arguments.'
+                return
+            if self.prefs.VERBOSE:
+                print 'nameForRelated: ' + nameForRelated
 
         start_num = 0
         end_num = 0
         index1 = 0
         index2 = 1
-        if self.prefs.VERBOSE:
-            print 'index1: ',
-            print index1
-            print 'index2: ',
-            print index2
 
         if len(args) == 1: #only an end num
             try:
