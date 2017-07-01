@@ -7,9 +7,13 @@ import matplotlib.pyplot as plt
 import datetime
 from Helper import Helper
 from Preferences import Preferences
+from PrintHelper import PrintHelper
 import locale
 
 class WordFrequencies:
+###############################################################################################
+# Members
+###############################################################################################
     namesSet = set()
     wordsDict = {} #{ word : { 'count': count , 'lastDate': last occurence , 'firstDate': first occurence , 'wasUpper': started with uppercase letter } }
     namesDict = {} #{ name : ( count , last occurence ) }
@@ -27,55 +31,20 @@ class WordFrequencies:
 
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     prefs = Preferences() #stored the user's preferences for various things
+    printer = PrintHelper(prefs)
 
-    WORD_COL_WIDTH = 20
-    NUM_COL_WIDTH = 6
-    DATE_COL_WIDTH = 8
 
-    #try to guess what is a name by looking for capitalized letters in the middle of sentences
-    def getGuessedNames(self):
-        f = open(namesURL, 'r+')
-        print 'Are these names? (y/n)'
-        for name in guessedNamesSet:
-            if name in namesSet:
-                break
-            inp = raw_input(name + ': ')
-            if inp == 'y':
-                namesSet.add(name)
+###############################################################################################
+# Loading and Setup
+###############################################################################################    
 
-        for name in namesSet:
-            f.write(name) + '\n'
 
-    def guessNames(self, line):
-        nameRegex = re.compile('[^\.] ([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w+|\.])')
-        names = nameRegex.search(line)
 
-        try: 
-            for name in names.groups():
-                self.guessedNamesSet.add(name)
-            #print names.groups() #TODO: regex is broken (doesn't capture all matches)
-        except:
-            return
 
-    #Add a name manually to the names set
-    def addName(self, args):
-        name = args[0]
-        if name in self.namesDict:
-            print "Name already added"
-            return
-        self.namesSet.add(name);
-        f = open(self.namesURL, 'a')
-        f.write(name + '\n')
-        f.close()
 
-    def removeName(self, name):
-        self.namesSet.remove(name);
-        f = open(self.namesURL, 'r+')
-        f.clear()
-        for name in self.namesSet:
-            f.write(name) + '\n'
-        f.close()
-
+###############################################################################################
+# Data Processing
+###############################################################################################
     #parse a line and add the words to the dictionaries
     def addLine(self, line, currentDate):
         words = line.split(' ')
@@ -145,6 +114,106 @@ class WordFrequencies:
                     self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
 
         return (wordsToCount, namesFound)
+
+
+###############################################################################################
+# Graphing and Printing
+###############################################################################################
+    #print the x most occuring words
+    #num: number to print. if 'all', prints all
+    def printHighest(self, args, option):
+        if self.prefs.VERBOSE:
+            print 'args: ',
+            print args
+            print 'option: ',
+            print option
+
+        if option == 'namesRelated':
+            nameForRelated = args[0]
+            args = args[1:]
+            if len(args) < 1:
+                print 'Too few arguments.'
+                return
+            if self.prefs.VERBOSE:
+                print 'nameForRelated: ' + nameForRelated
+
+        start_num = 0
+        end_num = 0
+        index1 = 0
+        index2 = 1
+
+        if len(args) == 1: #only an end num
+            try:
+                if (args[index1] == 'all'):
+                    end_num = float('inf')
+                else:
+                    end_num = int(args[index1])
+            except:
+                print 'Invalid arguments'
+                return
+        elif len(args) >= 2: #start and end
+            try:
+                start_num = int(args[index1])
+                if (args[index2] == 'all'):
+                    end_num = float('inf')
+                else:
+                    end_num = int(args[index2])
+            except:
+                print 'Invalid arguments'
+                return
+
+        if self.prefs.VERBOSE:
+            print 'start_num: ',
+            print start_num,
+            print ' end_num ',
+            print end_num
+
+        #TODO: add headers to all cases
+        if option == 'names':
+            sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
+            sortedNamesDict.reverse()
+            end_num = min(end_num, len(sortedNamesDict))
+            self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
+            for x in xrange(start_num, end_num):
+                self.printer.makeOutputPretty(sortedNamesDict[x])
+        elif option == 'namesRelated':
+            #TODO: deal with 'all' here, since it won't be caught earlier
+            sortedRelatedNamesDict = sorted(self.relatedNamesDict[nameForRelated].items(), key=operator.itemgetter(1))
+            sortedRelatedNamesDict.reverse()
+            print 'Related names for ' + nameForRelated + ':\n'
+            self.printer.makePrettyHeader('Name', 'Count')
+            end_num = min(end_num, len(sortedRelatedNamesDict))
+            for x in xrange(start_num, end_num):
+                self.printer.makeOutputPrettyRelated(sortedRelatedNamesDict[x])
+        elif option == 'wordsPerDay':
+            sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
+            sortedWordsPerDayDict.reverse()
+            end_num = min(end_num, len(sortedWordsPerDayDict))
+            self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
+            for x in xrange(start_num, end_num):
+                self.printer.makeOutputPrettyWPD(sortedWordsPerDayDict[x])
+        elif option == 'namesPerDay':
+            sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
+            sortedNamesPerDayDict.reverse()
+            end_num = min(end_num, len(sortedNamesPerDayDict))
+            self.printer.makePrettyHeader('Name', 'Count', 'Last Occurence')
+            for x in xrange(start_num, end_num):
+                self.printer.makeOutputPretty(sortedNamesPerDayDict[x])
+        elif option == 'length':
+            sortedLengthOfEntriesDict = sorted(self.wordCountOfEntriesDict.items(), key=operator.itemgetter(1))
+            sortedLengthOfEntriesDict.reverse()
+            end_num = min(end_num, len(sortedLengthOfEntriesDict))
+            self.printer.makePrettyHeader('Date', 'Count')
+            for x in xrange(start_num, end_num):
+                self.printer.makeOutputPrettyLength(sortedLengthOfEntriesDict[x])
+        else: #regular words
+            self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
+            sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
+            sortedWordsDict.reverse()
+            end_num = min(end_num, len(sortedWordsDict))
+            for x in xrange(start_num, end_num):
+                self.printer.makeOutputPrettyWordsDict(sortedWordsDict[x])
+
 
     #graphs the number of occurences of the name per day
     def graphAnalytics(self, args):
@@ -235,169 +304,10 @@ class WordFrequencies:
         print locale.format("%d", self.totalNumberOfWords, grouping=True)
 
 
-    #date is a datetime object
-    def makeOutputPrettyHelper(self, word, count, date):
-        if len(word) <= self.WORD_COL_WIDTH:
-            print word,
-            chars_left = self.WORD_COL_WIDTH - len(word)
-            print ' ' * chars_left,
-        else:
-            print word[:self.WORD_COL_WIDTH],
 
-        #TODO: deal with overshoot on numbers and date
-        print count,
-        print ' ' * (self.NUM_COL_WIDTH - len(str(count))),
-
-        if date != None:
-            date = Helper.prettyPrintDate(date)
-            print date,
-            print ' ' * (self.DATE_COL_WIDTH - len(str(date)))
-        else:
-            print ''
-
-    def makePrettyHeader(self, col1name, col2name = '', col3name = ''):
-        print col1name,
-        print ' ' * (self.WORD_COL_WIDTH - 4),
-        print col2name,
-        print ' ' * (self.NUM_COL_WIDTH - 5),
-        print col3name
-        print '-'*(self.WORD_COL_WIDTH + self.NUM_COL_WIDTH + self.DATE_COL_WIDTH) #38
-
-    def makeOutputPretty(self, inp): #( word : ( count , last occurence ) )
-        word = inp[0]
-        count = inp[1][0]
-        date = inp[1][1]
-        self.makeOutputPrettyHelper(word, count, date)
-
-    def makeOutputPrettyRelated(self, inp): #( name , count )
-        name = inp[0]
-        count = inp[1]
-        self.makeOutputPrettyHelper(name, count, None)
-
-    def makeOutputPrettyLength(self, inp): #{ date : word count }
-        # self.makeOutputPrettyHelper(None, inp[1], inp[0])
-        date = inp[0]
-        count = inp[1]
-
-        if len(str(date)) <= self.WORD_COL_WIDTH:
-            print date,
-            chars_left = self.WORD_COL_WIDTH - len(str(date))
-            print ' ' * chars_left,
-        else:
-            print date[:self.WORD_COL_WIDTH],
-
-        #TODO: deal with overshoot on numbers and date
-        print count,
-        print ' ' * (self.NUM_COL_WIDTH - len(str(count)))
-
-    #inp comes in as a tuple due to the sorting and the fact that dicts can't be sorted
-    def makeOutputPrettyWPD(self, inp): #( word : { 'count': count, 'lastOccurence': last occurence } )
-        word = inp[0]
-        count = inp[1]['count']
-        date = inp[1]['lastOccurence']
-        self.makeOutputPrettyHelper(word, count, date)
-
-    def makeOutputPrettyWordsDict(self, inp): #( word : { 'count': count, 'lastDate': last occurence, 'firstDate': first occurence } )
-        word = inp[0]
-        count = inp[1]['count']
-        date = inp[1]['lastDate']
-        self.makeOutputPrettyHelper(word, count, date)
-        
-    #print the x most occuring words
-    #num: number to print. if 'all', prints all
-    def printHighest(self, args, option):
-        if self.prefs.VERBOSE:
-            print 'args: ',
-            print args
-            print 'option: ',
-            print option
-
-        if option == 'namesRelated':
-            nameForRelated = args[0]
-            args = args[1:]
-            if len(args) < 1:
-                print 'Too few arguments.'
-                return
-            if self.prefs.VERBOSE:
-                print 'nameForRelated: ' + nameForRelated
-
-        start_num = 0
-        end_num = 0
-        index1 = 0
-        index2 = 1
-
-        if len(args) == 1: #only an end num
-            try:
-                if (args[index1] == 'all'):
-                    end_num = float('inf')
-                else:
-                    end_num = int(args[index1])
-            except:
-                print 'Invalid arguments'
-                return
-        elif len(args) >= 2: #start and end
-            try:
-                start_num = int(args[index1])
-                if (args[index2] == 'all'):
-                    end_num = float('inf')
-                else:
-                    end_num = int(args[index2])
-            except:
-                print 'Invalid arguments'
-                return
-
-        if self.prefs.VERBOSE:
-            print 'start_num: ',
-            print start_num,
-            print ' end_num ',
-            print end_num
-
-        #TODO: add headers to all cases
-        if option == 'names':
-            sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
-            sortedNamesDict.reverse()
-            end_num = min(end_num, len(sortedNamesDict))
-            self.makePrettyHeader('Word', 'Count', 'Last Occurence')
-            for x in xrange(start_num, end_num):
-                self.makeOutputPretty(sortedNamesDict[x])
-        elif option == 'namesRelated':
-            #TODO: deal with 'all' here, since it won't be caught earlier
-            sortedRelatedNamesDict = sorted(self.relatedNamesDict[nameForRelated].items(), key=operator.itemgetter(1))
-            sortedRelatedNamesDict.reverse()
-            print 'Related names for ' + nameForRelated + ':\n'
-            self.makePrettyHeader('Name', 'Count')
-            end_num = min(end_num, len(sortedRelatedNamesDict))
-            for x in xrange(start_num, end_num):
-                self.makeOutputPrettyRelated(sortedRelatedNamesDict[x])
-        elif option == 'wordsPerDay':
-            sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
-            sortedWordsPerDayDict.reverse()
-            end_num = min(end_num, len(sortedWordsPerDayDict))
-            self.makePrettyHeader('Word', 'Count', 'Last Occurence')
-            for x in xrange(start_num, end_num):
-                self.makeOutputPrettyWPD(sortedWordsPerDayDict[x])
-        elif option == 'namesPerDay':
-            sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
-            sortedNamesPerDayDict.reverse()
-            end_num = min(end_num, len(sortedNamesPerDayDict))
-            self.makePrettyHeader('Name', 'Count', 'Last Occurence')
-            for x in xrange(start_num, end_num):
-                self.makeOutputPretty(sortedNamesPerDayDict[x])
-        elif option == 'length':
-            sortedLengthOfEntriesDict = sorted(self.wordCountOfEntriesDict.items(), key=operator.itemgetter(1))
-            sortedLengthOfEntriesDict.reverse()
-            end_num = min(end_num, len(sortedLengthOfEntriesDict))
-            self.makePrettyHeader('Date', 'Count')
-            for x in xrange(start_num, end_num):
-                self.makeOutputPrettyLength(sortedLengthOfEntriesDict[x])
-        else: #regular words
-            self.makePrettyHeader('Word', 'Count', 'Last Occurence')
-            sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
-            sortedWordsDict.reverse()
-            end_num = min(end_num, len(sortedWordsDict))
-            for x in xrange(start_num, end_num):
-                self.makeOutputPrettyWordsDict(sortedWordsDict[x])
-
+###############################################################################################
+# Names
+###############################################################################################
     def addRelatedNames(self, namesFound):
         #{ name : { name : unique day count } }
         for keyName in namesFound:
@@ -412,6 +322,114 @@ class WordFrequencies:
                     self.relatedNamesDict[keyName][otherName] += 1
                 except:
                     self.relatedNamesDict[keyName][otherName] = 1
+
+    #populate namesList from file
+    def makeNamesSet(self):
+        try:
+            f = open(self.namesURL, 'r') #TODO: error handling
+        except:
+            raise Exception("Names file not found")
+        self.namesSet.clear()
+        line = f.readline()
+        while line != '':
+            self.namesSet.add(line.strip().lower()) #TODO: does this do anything? What?
+            line = f.readline()
+
+    #try to guess what is a name by looking for capitalized letters in the middle of sentences
+    def getGuessedNames(self):
+        f = open(namesURL, 'r+')
+        print 'Are these names? (y/n)'
+        for name in guessedNamesSet:
+            if name in namesSet:
+                break
+            inp = raw_input(name + ': ')
+            if inp == 'y':
+                namesSet.add(name)
+
+        for name in namesSet:
+            f.write(name) + '\n'
+
+    def guessNames(self, line):
+        nameRegex = re.compile('[^\.] ([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w+|\.])')
+        names = nameRegex.search(line)
+
+        try: 
+            for name in names.groups():
+                self.guessedNamesSet.add(name)
+            #print names.groups() #TODO: regex is broken (doesn't capture all matches)
+        except:
+            return
+
+    #Add a name manually to the names set
+    def addName(self, args):
+        name = args[0]
+        if name in self.namesDict:
+            print "Name already added"
+            return
+        self.namesSet.add(name);
+        f = open(self.namesURL, 'a')
+        f.write(name + '\n')
+        f.close()
+
+    def removeName(self, name):
+        self.namesSet.remove(name);
+        f = open(self.namesURL, 'r+')
+        f.clear()
+        for name in self.namesSet:
+            f.write(name) + '\n'
+        f.close()
+
+
+###############################################################################################
+# Control Loop
+###############################################################################################
+    def main(self, args):
+        self.mainSetup(args)
+        self.runMainLoop()
+
+    #break apart the main function for testing
+    def mainSetup(self, args):
+        locale.setlocale(locale.LC_ALL, 'en_US')
+        fileurl = args.file
+
+        if args.verbosity:
+            self.prefs.VERBOSE = True
+        if args.combineplurals:
+            self.prefs.COMBINE_PLURALS = True
+
+        self.makeNamesSet()
+        self.readFile(fileurl)
+
+    #break apart the main function for testing
+    def runMainLoop(self):
+        while True:
+            print '''
+    Options:
+    Highest x words             highest [num | all] (num | all)
+    Highest x words per day     wpd [num | all]
+    Lookup                      lookup [word]
+    Highest x names             names [num | all]
+    Related Names               related [name] [num | all]
+    Highest x names per day     npd [num | all]
+    Graph names                 graph [name]
+    Graph entries               graphentries
+    Graph length                graphlength
+    Add name                    add name [name]
+    Set Options                 option [option_name] [value]
+    Length                      length [num | all]
+    Overall analytics           overall
+    Exit                        exit
+    '''
+            if not self.parseInput(raw_input('>')):
+                return
+
+    def parseInput(self, inpStr):
+        parts = inpStr.split()
+        command = parts[0].lower().strip().lstrip()
+        args = parts[1:]
+        if (self.prefs.VERBOSE):
+            print 'Parsed arguments: command: ' + str(command) + ' args: ' + str(args)
+        return self.callInputFunction(command, args)
 
     def readFile(self, url):
         try:
@@ -501,69 +519,9 @@ class WordFrequencies:
             print 'Unknown command.'
         return True
 
-    #populate namesList from file
-    def makeNamesSet(self):
-        try:
-            f = open(self.namesURL, 'r') #TODO: error handling
-        except:
-            raise Exception("Names file not found")
-        self.namesSet.clear()
-        line = f.readline()
-        while line != '':
-            self.namesSet.add(line.strip().lower()) #TODO: does this do anything? What?
-            line = f.readline()
-
-    def parseInput(self, inpStr):
-        parts = inpStr.split()
-        command = parts[0].lower().strip().lstrip()
-        args = parts[1:]
-        if (self.prefs.VERBOSE):
-            print 'Parsed arguments: command: ' + str(command) + ' args: ' + str(args)
-        return self.callInputFunction(command, args)
-
-    #break apart the main function for testing
-    def runMainLoop(self):
-        while True:
-            print '''
-    Options:
-    Highest x words             highest [num | all] (num | all)
-    Highest x words per day     wpd [num | all]
-    Lookup                      lookup [word]
-    Highest x names             names [num | all]
-    Related Names               related [name] [num | all]
-    Highest x names per day     npd [num | all]
-    Graph names                 graph [name]
-    Graph entries               graphentries
-    Graph length                graphlength
-    Add name                    add name [name]
-    Set Options                 option [option_name] [value]
-    Length                      length [num | all]
-    Overall analytics           overall
-    Exit                        exit
-    '''
-            if not self.parseInput(raw_input('>')):
-                return
-
-    #break apart the main function for testing
-    def mainSetup(self, args):
-        locale.setlocale(locale.LC_ALL, 'en_US')
-        fileurl = args.file
-
-        if args.verbosity:
-            self.prefs.VERBOSE = True
-        if args.combineplurals:
-            self.prefs.COMBINE_PLURALS = True
-
-        self.makeNamesSet()
-        self.readFile(fileurl)
-
-
-    def main(self, args):
-        self.mainSetup(args)
-        self.runMainLoop()
-
-
-
+###############################################################################################
+# Main 
+###############################################################################################
 #Options need to be set on startup
 if __name__ == '__main__':
     wf = WordFrequencies()
