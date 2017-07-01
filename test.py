@@ -21,7 +21,7 @@ class TestUM(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.wf = WordFrequencies()
-        self.wf.mainSetup(argparse.Namespace(file='/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/testjournal1.txt', 
+        self.wf.mainSetup(argparse.Namespace(file='/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/testjournal1.rtf', 
             verbosity=False, combineplurals=False))
 
     @classmethod
@@ -29,11 +29,10 @@ class TestUM(unittest.TestCase):
         pass
 
     def test_classVariables(self):
-        self.assertEqual(self.wf.firstDate, datetime(2014,12,1))
+        self.assertEqual(self.wf.firstDate, datetime(2017,1,1))
         self.assertEqual(self.wf.mostRecentDate, datetime(2017,12,31))
         self.assertEqual(self.wf.namesURL, "/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/names.txt")
         self.assertEqual(self.wf.totalNumberOfWords, 51)
-
 
     def test_journalParsing(self):
         self.assertEqual(len(self.wf.wordCountOfEntriesDict), 7)
@@ -66,8 +65,8 @@ class TestUM(unittest.TestCase):
             'two                   5       02-05-2017 ', 'cheryl                4       01-05-2017 ', 'dirk                  3       01-05-2017 ', 
             'five                  2       02-05-2017 ', 'skipping              2       02-05-2017 ', 'laura                 2       01-05-2017 ', 
             'four                  2       01-05-2017 ', 'a                     2       02-05-2017 ', 'month                 1       02-05-2017 ', 
-            'another               1       12-01-2014 ', 'three                 1       01-03-2017 ', 'testing               1       12-31-2017 ', 
-            'date                  1       12-01-2014 ', 'dates                 1       12-31-2017 '])
+            'another               1       09-08-2017 ', 'three                 1       01-03-2017 ', 'testing               1       12-31-2017 ', 
+            'date                  1       09-08-2017 ', 'dates                 1       12-31-2017 '])
         self.assertEqual(str(output), expected)
 
         with Capturing() as output2:
@@ -97,7 +96,6 @@ class TestUM(unittest.TestCase):
             'dirk                  3       ', 'laura                 2       '])
         self.assertEqual(str(output), expected)
 
-
     #TODO: re-enable
     # def test_overall(self):
     #     with Capturing() as output:
@@ -106,6 +104,16 @@ class TestUM(unittest.TestCase):
     #         'Percentage of days from first to last with an entry:  0.62%', 'Average length per entry:  7.29', 'Longest entry: 14 words on  01-05-2017', 
     #         'Total number of words written:  51'])
     #     self.assertEqual(str(output), expected)
+
+
+
+    ##############################################################
+    ###################### Regression tests ######################
+    ##############################################################
+
+    def test_firstDateIsCaptured(self):
+        self.assertEqual(self.wf.wordCountOfEntriesDict[datetime(2017,1,1)], 6) #make sure first date exists and wasn't skipped over
+
 
 
 if __name__ == '__main__':

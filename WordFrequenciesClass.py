@@ -279,9 +279,9 @@ class WordFrequencies:
         date = inp[0]
         count = inp[1]
 
-        if len(date) <= self.WORD_COL_WIDTH:
+        if len(str(date)) <= self.WORD_COL_WIDTH:
             print date,
-            chars_left = self.WORD_COL_WIDTH - len(date)
+            chars_left = self.WORD_COL_WIDTH - len(str(date))
             print ' ' * chars_left,
         else:
             print date[:self.WORD_COL_WIDTH],
@@ -602,12 +602,29 @@ figure out how to deal with "[date] through [date]:"
 use constants for strings
 
 figure out what to do with multiple people of the same name
+    maybe generate a mark under text file that shadows the journal with markup on the names for disambiguation
+        this could also work toward caching
+        
 
 have a reverse order flag of some sort (allow to view in ascending order rather than descending)
+
+allow option to filter by dates
+
+
+connect this to other things
+    step counter 
+    google location
+    texts sent/received
+    pictures
+
+
+make a gui navigable interface
 
 
 Bugs:
 fix axes on graphing
-firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's the first date in there
+firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's the first date in there (but test case works)
+
+days are off by one
 
 '''
