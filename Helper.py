@@ -59,3 +59,7 @@ class Helper:
     def prettyPrintDate(date):
         return date.strftime('%m-%d-%Y')
 
+    @staticmethod
+    def cleanInput(inp):
+        return inp.lower().strip().lstrip()
+

@@ -31,9 +31,11 @@ class WordFrequencies:
     mostRecentDate = datetime.datetime(datetime.MINYEAR,1,1)
 
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
-    makeUnderFilePath = os.path.dirname(os.path.realpath(__file__)) + '/markunder.txt'
+    markUnderFilePath = os.path.dirname(os.path.realpath(__file__)) + '/markunder.txt'
     prefs = Preferences() #stored the user's preferences for various things
     printer = PrintHelper(prefs)
+
+    MARK_UNDER_DELIMITER = '@@'
 
 
 ###############################################################################################
@@ -43,9 +45,11 @@ class WordFrequencies:
 
 
     #if it's a name, ask which name it is, store it in a markup format, and compute a hash of the day
+
+    #return either the word unchanged, or the qualified name if it's a name
     def writeToMarkUnder(self, word, line, date):
         if word  not in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
-            return
+            return word
 
         print '\n\n\n'
         print Helper.prettyPrintDate(date)
@@ -66,24 +70,26 @@ class WordFrequencies:
         #get the last name either from the number of the choice (if it's a number) or the last name that was directly entered
         lastName = ''
         choice = raw_input('>')
-        found = False
-        for x in xrange(1, numPossibleLastNames):
+        choice = Helper.cleanInput(choice)
+        lastName = choice
+        for x in xrange(0, numPossibleLastNames):
             if choice == str(x):
                 lastName = self.lastNamesForFirstNameDict[word][x]
-                found = True
-        if not found:
-            lastName = choice
+                break
 
         try:
-            self.lastNamesForFirstNameDict[word].append(lastName)
+            if lastName not in self.lastNamesForFirstNameDict[word]:
+                self.lastNamesForFirstNameDict[word].append(lastName)
         except:
             self.lastNamesForFirstNameDict[word] = [lastName]
 
+        #create the qualified name to insert into the markunder
+        qualifiedLastName = word + self.MARK_UNDER_DELIMITER + lastName
+
+        return qualifiedLastName
 
 
         #need to actually do something to associate the info the user entered with the specific instance of the name
-
-        #TODO: write lastName to file
 
 
 
@@ -93,6 +99,8 @@ class WordFrequencies:
 ###############################################################################################
     #parse a line and add the words to the dictionaries
     def addLine(self, line, currentDate):
+        markunderFile = open(self.markUnderFilePath, 'a')
+
         words = line.split(' ')
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
         namesFound = set()
@@ -159,8 +167,11 @@ class WordFrequencies:
             except:
                     self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
 
-            self.writeToMarkUnder(word, line, currentDate)
+            markUnderWord = self.writeToMarkUnder(word, line, currentDate)
 
+            markunderFile.write(markUnderWord + ' ')
+
+        markunderFile.close()
         return (wordsToCount, namesFound)
 
 
