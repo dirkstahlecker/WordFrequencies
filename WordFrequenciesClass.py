@@ -23,6 +23,7 @@ class WordFrequencies:
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
     wordCountOfEntriesDict = {} #{ date : word count }
     relatedNamesDict = {} #{ name : { name : unique day count } }
+    lastNamesForFirstNameDict = {} #{ first name : [ last names ] }
     totalNumberOfWords = 0
 
     guessedNamesSet = set()
@@ -30,6 +31,7 @@ class WordFrequencies:
     mostRecentDate = datetime.datetime(datetime.MINYEAR,1,1)
 
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
+    makeUnderFilePath = os.path.dirname(os.path.realpath(__file__)) + '/markunder.txt'
     prefs = Preferences() #stored the user's preferences for various things
     printer = PrintHelper(prefs)
 
@@ -38,6 +40,50 @@ class WordFrequencies:
 # Loading and Setup
 ###############################################################################################    
 
+
+
+    #if it's a name, ask which name it is, store it in a markup format, and compute a hash of the day
+    def writeToMarkUnder(self, word, line, date):
+        if word  not in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
+            return
+
+        print '\n\n\n'
+        print Helper.prettyPrintDate(date)
+        print line #gives context so you can figure out what's going on
+        print 'Which ' + word + ' is this?'
+        numPossibleLastNames = 0
+
+        try:
+            self.lastNamesForFirstNameDict[word] #trigger exception if there's one to be thrown
+            for nameFromDict in self.lastNamesForFirstNameDict[word]:
+                print str(numPossibleLastNames) + ': ' + nameFromDict
+                numPossibleLastNames = numPossibleLastNames + 1
+            print 'Or type new last name'
+        except:
+            print 'Type last name:'
+
+
+        #get the last name either from the number of the choice (if it's a number) or the last name that was directly entered
+        lastName = ''
+        choice = raw_input('>')
+        found = False
+        for x in xrange(1, numPossibleLastNames):
+            if choice == str(x):
+                lastName = self.lastNamesForFirstNameDict[word][x]
+                found = True
+        if not found:
+            lastName = choice
+
+        try:
+            self.lastNamesForFirstNameDict[word].append(lastName)
+        except:
+            self.lastNamesForFirstNameDict[word] = [lastName]
+
+
+
+        #need to actually do something to associate the info the user entered with the specific instance of the name
+
+        #TODO: write lastName to file
 
 
 
@@ -113,6 +159,8 @@ class WordFrequencies:
             except:
                     self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
 
+            self.writeToMarkUnder(word, line, currentDate)
+
         return (wordsToCount, namesFound)
 
 
@@ -121,6 +169,7 @@ class WordFrequencies:
 ###############################################################################################
     #print the x most occuring words
     #num: number to print. if 'all', prints all
+    #TODO: it would be nice to move at least part of this function to the printer class
     def printHighest(self, args, option):
         if self.prefs.VERBOSE:
             print 'args: ',
@@ -562,6 +611,7 @@ use constants for strings
 figure out what to do with multiple people of the same name
     maybe generate a mark under text file that shadows the journal with markup on the names for disambiguation
         this could also work toward caching
+        maybe calculate a hash of the day after going through and generating the markdown then using that to see what has been updated
         
 
 have a reverse order flag of some sort (allow to view in ascending order rather than descending)
@@ -582,7 +632,6 @@ make a gui navigable interface
 Bugs:
 fix axes on graphing
 firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's the first date in there (but test case works)
-
 days are off by one
 
 '''
