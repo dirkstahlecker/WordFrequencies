@@ -9,6 +9,7 @@ from Helper import Helper
 from Preferences import Preferences
 from PrintHelper import PrintHelper
 import locale
+import hashlib
 
 class WordFrequencies:
 ###############################################################################################
@@ -25,6 +26,7 @@ class WordFrequencies:
     relatedNamesDict = {} #{ name : { name : unique day count } }
     lastNamesForFirstNameDict = {} #{ first name : [ last names ] }
     totalNumberOfWords = 0
+    dayEntryHashTable = {} #{ date : hash }
 
     guessedNamesSet = set()
     firstDate = datetime.datetime(datetime.MAXYEAR,12,31)
@@ -508,21 +510,28 @@ class WordFrequencies:
         numWords = 0
         namesFound = set()
         totalWordNum = 0
+
+        currentDayEntry = '' #holds all the lines for the current day, so we can compute a hash of the day later on
         
         line = f.readline()
         while (line != ''):
             #check a line to see if it's a date, therefore a new day
-            res = newdate.match(line)
-            if res != None: #date found
+            dateFound = newdate.match(line)
+            if dateFound != None: #date found
                 if namesFound != None:
                     self.addRelatedNames(namesFound)
                     namesFound = set()
+                    self.dayEntryHashTable[currentDateObj] = hashlib.md5(currentDayEntry.encode()) #TODO: deal with first date
+                    #write entry to markunder journal
+                    #TODO: reconcile this with the write method for last names
+                    markunderFile = open(self.markUnderFilePath, 'a')
+                    markunderFile.write(currentDayEntry)
 
                 if numWords > 0:
                     self.wordCountOfEntriesDict[currentDateObj] = numWords #should be here, since we want it triggered at the end
                 totalWordNum += numWords
                 numWords = 0
-                currentDateStr = res.group(0)
+                currentDateStr = dateFound.group(0)
                 currentDateStr = Helper.formatDateStringIntoCleanedString(currentDateStr)
                 currentDateObj = Helper.makeDateObject(currentDateStr)
 
@@ -539,6 +548,7 @@ class WordFrequencies:
                 numWords += wordsFound
                 # self.guessNames(line)
             line = f.readline()
+            currentDayEntry += line #add line to the day's entry
 
         #need to capture the last date for the entry length
         self.wordCountOfEntriesDict[currentDateObj] = numWords 

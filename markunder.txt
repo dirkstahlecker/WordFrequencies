@@ -1,0 +1,68 @@
+
+01-01-2017: day one sentence one $$cheryl@@gaul$$ $$laura@@standley$$ 
+01-01-2017: 
+01-02-2017: day two sentence one $$dirk@@stahlecker$$ $$cheryl@@gaul$$ 
+01-02-2017: day two sentence two 
+01-02-2017: 
+1-02-17: day two sentence one Dirk Cheryl.
+
+01-03-2017: day three sentence one $$dirk@@stahlecker$$ $$cheryl@@gaul$$ 
+01-03-2017: 
+1-02-17: day two sentence one Dirk Cheryl.
+Day two sentence two.
+
+1-03-17: day three sentence one Dirk Cheryl.
+
+01-05-2017: day four sentence one $$dirk@@stahlecker$$ $$cheryl@@gaul$$ $$laura@@standley$$ 
+01-05-2017: day four sentence two skipping a day 
+01-05-2017: 
+1-02-17: day two sentence one Dirk Cheryl.
+Day two sentence two.
+
+1-03-17: day three sentence one Dirk Cheryl.
+
+1-05-17: day four sentence one Dirk Cheryl Laura.
+
+02-05-2017: day five sentence one 
+02-05-2017: day five sentence two skipping a month 
+02-05-2017: 
+1-02-17: day two sentence one Dirk Cheryl.
+Day two sentence two.
+
+1-03-17: day three sentence one Dirk Cheryl.
+
+1-05-17: day four sentence one Dirk Cheryl Laura.
+Day four sentence two skipping a day.
+
+2-05-17: day five sentence one.
+
+12-31-2017: testing dates 
+12-31-2017: 
+1-02-17: day two sentence one Dirk Cheryl.
+Day two sentence two.
+
+1-03-17: day three sentence one Dirk Cheryl.
+
+1-05-17: day four sentence one Dirk Cheryl Laura.
+Day four sentence two skipping a day.
+
+2-05-17: day five sentence one.
+Day five sentence two skipping a month.
+
+12-31-17: testing dates
+
+09-08-2017: another date 
+1-02-17: day two sentence one Dirk Cheryl.
+Day two sentence two.
+
+1-03-17: day three sentence one Dirk Cheryl.
+
+1-05-17: day four sentence one Dirk Cheryl Laura.
+Day four sentence two skipping a day.
+
+2-05-17: day five sentence one.
+Day five sentence two skipping a month.
+
+12-31-17: testing dates
+
+9-8-17: another date
