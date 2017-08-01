@@ -36,6 +36,7 @@ class WordFrequencies:
     printer = PrintHelper(prefs)
 
     MARK_UNDER_DELIMITER = '@@'
+    MARK_UNDER_DELIMITER_ENDS = '$$'
 
 
 ###############################################################################################
@@ -84,7 +85,7 @@ class WordFrequencies:
             self.lastNamesForFirstNameDict[word] = [lastName]
 
         #create the qualified name to insert into the markunder
-        qualifiedLastName = word + self.MARK_UNDER_DELIMITER + lastName
+        qualifiedLastName = self.MARK_UNDER_DELIMITER_ENDS + word + self.MARK_UNDER_DELIMITER + lastName + self.MARK_UNDER_DELIMITER_ENDS
 
         return qualifiedLastName
 
@@ -100,6 +101,7 @@ class WordFrequencies:
     #parse a line and add the words to the dictionaries
     def addLine(self, line, currentDate):
         markunderFile = open(self.markUnderFilePath, 'a')
+        markunderFile.write('\n' + Helper.prettyPrintDate(currentDate) + ': ')
 
         words = line.split(' ')
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
