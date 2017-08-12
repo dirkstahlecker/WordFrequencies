@@ -1,68 +1,205 @@
 
-01-01-2017: day one sentence one $$cheryl@@gaul$$ $$laura@@standley$$ 
-01-01-2017: 
-01-02-2017: day two sentence one $$dirk@@stahlecker$$ $$cheryl@@gaul$$ 
-01-02-2017: day two sentence two 
-01-02-2017: 
-1-02-17: day two sentence one Dirk Cheryl.
+==============
+day 
+==============
 
-01-03-2017: day three sentence one $$dirk@@stahlecker$$ $$cheryl@@gaul$$ 
-01-03-2017: 
-1-02-17: day two sentence one Dirk Cheryl.
-Day two sentence two.
+==============
+one 
+==============
 
-1-03-17: day three sentence one Dirk Cheryl.
+==============
+sentence 
+==============
 
-01-05-2017: day four sentence one $$dirk@@stahlecker$$ $$cheryl@@gaul$$ $$laura@@standley$$ 
-01-05-2017: day four sentence two skipping a day 
-01-05-2017: 
-1-02-17: day two sentence one Dirk Cheryl.
-Day two sentence two.
+==============
+one 
+==============
 
-1-03-17: day three sentence one Dirk Cheryl.
+==============
+$$cheryl@@gaul$$ 
+==============
 
-1-05-17: day four sentence one Dirk Cheryl Laura.
+==============
+$$laura@@standley$$ 
+==============
 
-02-05-2017: day five sentence one 
-02-05-2017: day five sentence two skipping a month 
-02-05-2017: 
-1-02-17: day two sentence one Dirk Cheryl.
-Day two sentence two.
+==============
+day 
+==============
 
-1-03-17: day three sentence one Dirk Cheryl.
+==============
+two 
+==============
 
-1-05-17: day four sentence one Dirk Cheryl Laura.
-Day four sentence two skipping a day.
+==============
+sentence 
+==============
 
-2-05-17: day five sentence one.
+==============
+one 
+==============
 
-12-31-2017: testing dates 
-12-31-2017: 
-1-02-17: day two sentence one Dirk Cheryl.
-Day two sentence two.
+==============
+$$dirk@@stahlecker$$ 
+==============
 
-1-03-17: day three sentence one Dirk Cheryl.
+==============
+$$cheryl@@gaul$$ 
+==============
 
-1-05-17: day four sentence one Dirk Cheryl Laura.
-Day four sentence two skipping a day.
+==============
+day 
+==============
 
-2-05-17: day five sentence one.
-Day five sentence two skipping a month.
+==============
+two 
+==============
 
-12-31-17: testing dates
+==============
+sentence 
+==============
 
-09-08-2017: another date 
-1-02-17: day two sentence one Dirk Cheryl.
-Day two sentence two.
+==============
+two 
+==============
 
-1-03-17: day three sentence one Dirk Cheryl.
+==============
+day 
+==============
 
-1-05-17: day four sentence one Dirk Cheryl Laura.
-Day four sentence two skipping a day.
+==============
+three 
+==============
 
-2-05-17: day five sentence one.
-Day five sentence two skipping a month.
+==============
+sentence 
+==============
 
-12-31-17: testing dates
+==============
+one 
+==============
 
-9-8-17: another date
+==============
+$$dirk@@stahlecker$$ 
+==============
+
+==============
+$$cheryl@@gaul$$ 
+==============
+
+==============
+day 
+==============
+
+==============
+four 
+==============
+
+==============
+sentence 
+==============
+
+==============
+one 
+==============
+
+==============
+$$dirk@@stahlecker$$ 
+==============
+
+==============
+$$cheryl@@gaul$$ 
+==============
+
+==============
+$$laura@@standley$$ 
+==============
+
+==============
+day 
+==============
+
+==============
+four 
+==============
+
+==============
+sentence 
+==============
+
+==============
+two 
+==============
+
+==============
+skipping 
+==============
+
+==============
+a 
+==============
+
+==============
+day 
+==============
+
+==============
+day 
+==============
+
+==============
+five 
+==============
+
+==============
+sentence 
+==============
+
+==============
+one 
+==============
+
+==============
+day 
+==============
+
+==============
+five 
+==============
+
+==============
+sentence 
+==============
+
+==============
+two 
+==============
+
+==============
+skipping 
+==============
+
+==============
+a 
+==============
+
+==============
+month 
+==============
+
+==============
+testing 
+==============
+
+==============
+dates 
+==============
+
+==============
+another 
+==============
+
+==============
+date 
+==============
+i was able to talk to $$josh@@wilson$$ wilson for about 15 minutes at lunch he now working four jobs including being a lighting engineer for concerts i was the first one done with the homework assignment in ap calc as well as the trig assignments in physics debate was as fun as ever i really want to get to know $$felisha@@corell$$ and $$lindsay@@$$ better and i think i kind of stand out more so than in my other classes which is good we played a colonial settler simulation as a class in history the first time we were only a few days away from winning when a hurricane hit and killed everyone we played again and about 20 days into the 180 we were hit again by a hurricane i saw $$kailyn@@cleveland$$ a couple times and she always talks to me when we pass each other in the halls which is nice 

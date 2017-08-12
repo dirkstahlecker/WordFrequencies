@@ -40,6 +40,8 @@ class WordFrequencies:
     MARK_UNDER_DELIMITER = '@@'
     MARK_UNDER_DELIMITER_ENDS = '$$'
 
+    DO_MARK_UNDER = False;
+
 
 ###############################################################################################
 # Loading and Setup
@@ -47,13 +49,11 @@ class WordFrequencies:
 
 
 
-    #if it's a name, ask which name it is, store it in a markup format, and compute a hash of the day
+    #only called for names
+    #ask which name it is, store it in a markup format, and compute a hash of the day
 
     #return either the word unchanged, or the qualified name if it's a name
-    def writeToMarkUnder(self, word, line, date):
-        if word  not in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
-            return word
-
+    def getMarkUnderWord(self, word, line, date):
         print '\n\n\n'
         print Helper.prettyPrintDate(date)
         print line #gives context so you can figure out what's going on
@@ -101,9 +101,10 @@ class WordFrequencies:
 # Data Processing
 ###############################################################################################
     #parse a line and add the words to the dictionaries
+    #print the line to markunder file, with the proper qualification on names
+    #all markunder printing should happen here
     def addLine(self, line, currentDate):
         markunderFile = open(self.markUnderFilePath, 'a')
-        markunderFile.write('\n' + Helper.prettyPrintDate(currentDate) + ': ')
 
         words = line.split(' ')
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
@@ -171,9 +172,14 @@ class WordFrequencies:
             except:
                     self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
 
-            markUnderWord = self.writeToMarkUnder(word, line, currentDate)
+            if self.DO_MARK_UNDER:
+                #if it's a name, qualify it for the markunder
+                if word  in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
+                    markUnderWord = self.getMarkUnderWord(word, line, currentDate)
+                else:
+                    markUnderWord = word
 
-            markunderFile.write(markUnderWord + ' ')
+                markunderFile.write(markUnderWord + ' ')
 
         markunderFile.close()
         return (wordsToCount, namesFound)
@@ -401,26 +407,29 @@ class WordFrequencies:
 
     #try to guess what is a name by looking for capitalized letters in the middle of sentences
     def getGuessedNames(self):
-        f = open(namesURL, 'r+')
+        newNames = set()
         print 'Are these names? (y/n)'
-        for name in guessedNamesSet:
-            if name in namesSet:
+        print self.guessedNamesSet
+        for name in self.guessedNamesSet:
+            if name in self.namesSet:
                 break
             inp = raw_input(name + ': ')
             if inp == 'y':
-                namesSet.add(name)
+                newNames.add(name.lower())
 
-        for name in namesSet:
-            f.write(name) + '\n'
+        f = open(self.namesURL, 'r+')
+        for name in newNames:
+            f.write(name + '\n')
+        f.close()
 
     def guessNames(self, line):
-        nameRegex = re.compile('[^\.] ([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w+|\.])')
+        nameRegex = re.compile('[^\.]\s+([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w]+)\W')
         names = nameRegex.search(line)
 
         try: 
             for name in names.groups():
-                self.guessedNamesSet.add(name)
-            #print names.groups() #TODO: regex is broken (doesn't capture all matches)
+                if name.lower() not in self.namesSet:
+                    self.guessedNamesSet.add(name)
         except:
             return
 
@@ -460,12 +469,15 @@ class WordFrequencies:
             self.prefs.VERBOSE = True
         if args.combineplurals:
             self.prefs.COMBINE_PLURALS = True
+        if args.guessnames:
+            self.prefs.GUESS_NAMES = True
 
         self.makeNamesSet()
         self.readFile(fileurl)
 
     #break apart the main function for testing
     def runMainLoop(self):
+        self.getGuessedNames()
         while True:
             print '''
     Options:
@@ -515,17 +527,15 @@ class WordFrequencies:
         
         line = f.readline()
         while (line != ''):
+            if self.prefs.GUESS_NAMES:
+                self.guessNames(line)
             #check a line to see if it's a date, therefore a new day
             dateFound = newdate.match(line)
-            if dateFound != None: #date found
+            if dateFound != None: #it's a new date, so wrapup the previous date and set up to move onto the next one
                 if namesFound != None:
                     self.addRelatedNames(namesFound)
                     namesFound = set()
                     self.dayEntryHashTable[currentDateObj] = hashlib.md5(currentDayEntry.encode()) #TODO: deal with first date
-                    #write entry to markunder journal
-                    #TODO: reconcile this with the write method for last names
-                    markunderFile = open(self.markUnderFilePath, 'a')
-                    markunderFile.write(currentDayEntry)
 
                 if numWords > 0:
                     self.wordCountOfEntriesDict[currentDateObj] = numWords #should be here, since we want it triggered at the end
@@ -546,7 +556,6 @@ class WordFrequencies:
                 for name in namesFoundThisLine:
                     namesFound.add(name)
                 numWords += wordsFound
-                # self.guessNames(line)
             line = f.readline()
             currentDayEntry += line #add line to the day's entry
 
@@ -602,6 +611,7 @@ if __name__ == '__main__':
     parser.add_argument('file', help='Path to file to examine')
     parser.add_argument('-v', '--verbosity', action='store_true', help='Enable verbose output')
     parser.add_argument('-p', '--combineplurals', action='store_true', help='Combine plurals')
+    parser.add_argument('-g', '--guessnames', action='store_true', help='Guess names')
     args = parser.parse_args()
 
     wf.main(args)
