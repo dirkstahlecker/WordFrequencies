@@ -40,8 +40,6 @@ class WordFrequencies:
     MARK_UNDER_DELIMITER = '@@'
     MARK_UNDER_DELIMITER_ENDS = '$$'
 
-    DO_MARK_UNDER = False;
-
 
 ###############################################################################################
 # Loading and Setup
@@ -172,7 +170,7 @@ class WordFrequencies:
             except:
                     self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
 
-            if self.DO_MARK_UNDER:
+            if self.prefs.DO_MARK_UNDER:
                 #if it's a name, qualify it for the markunder
                 if word  in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
                     markUnderWord = self.getMarkUnderWord(word, line, currentDate)
@@ -471,13 +469,17 @@ class WordFrequencies:
             self.prefs.COMBINE_PLURALS = True
         if args.guessnames:
             self.prefs.GUESS_NAMES = True
+        if args.markunder:
+            self.prefs.DO_MARK_UNDER = True
+        if args.noMarkunder:
+            self.prefs.DO_MARK_UNDER = False
 
         self.makeNamesSet()
         self.readFile(fileurl)
 
-    #break apart the main function for testing
     def runMainLoop(self):
-        self.getGuessedNames()
+        if self.prefs.GUESS_NAMES:
+            self.getGuessedNames()
         while True:
             print '''
     Options:
@@ -612,6 +614,8 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbosity', action='store_true', help='Enable verbose output')
     parser.add_argument('-p', '--combineplurals', action='store_true', help='Combine plurals')
     parser.add_argument('-g', '--guessnames', action='store_true', help='Guess names')
+    parser.add_argument('-m', '--markunder', action='store_true', help='Enable markunder')
+    parser.add_argument('-nm', '--noMarkunder', action='store_false', help='Disable markunder')
     args = parser.parse_args()
 
     wf.main(args)
