@@ -52,11 +52,11 @@ class WordFrequencies:
     #ask which name it is, store it in a markup format, and compute a hash of the day
 
     #return either the word unchanged, or the qualified name if it's a name
-    def getMarkUnderWord(self, word, line, date):
+    def getMarkUnderWord(self, word, originalWord, line, date):
         print '\n\n\n'
         print Helper.prettyPrintDate(date)
         print line #gives context so you can figure out what's going on
-        print 'Which ' + word + ' is this?'
+        print 'Which ' + originalWord + ' is this?'
         numPossibleLastNames = 0
 
         try:
@@ -72,7 +72,8 @@ class WordFrequencies:
         #get the last name either from the number of the choice (if it's a number) or the last name that was directly entered
         lastName = ''
         choice = raw_input('>')
-        choice = Helper.cleanInput(choice)
+        # originalLastName = choice
+        # choice = Helper.cleanInput(choice)
         lastName = choice
         for x in xrange(0, numPossibleLastNames):
             if choice == str(x):
@@ -86,7 +87,7 @@ class WordFrequencies:
             self.lastNamesForFirstNameDict[word] = [lastName]
 
         #create the qualified name to insert into the markunder
-        qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER + word + ' ' + lastName + self.MARK_UNDER_ENDS
+        qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER + originalWord + ' ' + lastName + self.MARK_UNDER_ENDS
 
         return qualifiedLastName
 
@@ -119,6 +120,7 @@ class WordFrequencies:
             wasUpper = False;
             if word[:1].isupper():
                 wasUpper = True;
+            originalWord = word
             word = Helper.cleanWord(word)
 
             if not Helper.valid(word):
@@ -174,7 +176,7 @@ class WordFrequencies:
             if self.prefs.DO_MARK_UNDER:
                 #if it's a name, qualify it for the markunder
                 if word  in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
-                    markUnderWord = self.getMarkUnderWord(word, line, currentDate)
+                    markUnderWord = self.getMarkUnderWord(word, originalWord, line, currentDate)
                 else:
                     markUnderWord = word
 

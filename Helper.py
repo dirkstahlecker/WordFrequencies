@@ -61,6 +61,5 @@ class Helper:
 
     @staticmethod
     def cleanInput(inp):
-        return inp.lower().strip().lstrip()
-
+        return inp.strip().lstrip().lower()
 
