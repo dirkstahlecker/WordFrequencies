@@ -10,6 +10,7 @@ from Preferences import Preferences
 from PrintHelper import PrintHelper
 import locale
 import hashlib
+from WordDict import WordDict
 
 class WordFrequencies:
 ###############################################################################################
@@ -17,6 +18,7 @@ class WordFrequencies:
 ###############################################################################################
     namesSet = set()
     wordsDict = {} #{ word : { 'count': count , 'lastDate': last occurence , 'firstDate': first occurence , 'wasUpper': started with uppercase letter } }
+    wordDict = WordDict() #TODO: switch to this, and get rid of wordsDict
     namesDict = {} #{ name : ( count , last occurence ) }
     wordsPerDayDict = {} #{ word : { 'count': count , 'lastOccurence': last occurence } } only counts one occurence per day
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
@@ -45,7 +47,6 @@ class WordFrequencies:
 ###############################################################################################
 # Loading and Setup
 ###############################################################################################    
-
 
 
     #only called for names
@@ -160,11 +161,13 @@ class WordFrequencies:
                     self.namesToGraphDictUniqueOccurences[word] = [currentDate]
 
             #words
-            try:
+            if self.wordDict.exists(word):
                 self.wordsDict[word] = {'count': self.wordsDict[word]['count'] + 1, 
                 'lastDate': currentDate, 'firstDate': self.wordsDict[word]['firstDate'], 'wasUpper': wasUpper}
-            except:
-                self.wordsDict[word] = {'count': 1, 'lastDate': currentDate, 'firstDate': currentDate}
+                self.wordDict.addOrReplaceWord(word, )
+
+            else:
+                self.wordDict.addWord(word, 1, currentDate, currentDate, wasUpper) #TODO: wasUpper wasn't there originally
             
             #words per day
             try:
