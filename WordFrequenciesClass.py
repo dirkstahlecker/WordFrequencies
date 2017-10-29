@@ -37,8 +37,9 @@ class WordFrequencies:
     prefs = Preferences() #stored the user's preferences for various things
     printer = PrintHelper(prefs)
 
-    MARK_UNDER_DELIMITER = '@@'
-    MARK_UNDER_DELIMITER_ENDS = '$$'
+    MARK_UNDER_START = '[!!'
+    MARK_UNDER_ENDS = '!!]'
+    MARK_UNDER_DELIMITER = '|'
 
 
 ###############################################################################################
@@ -85,7 +86,7 @@ class WordFrequencies:
             self.lastNamesForFirstNameDict[word] = [lastName]
 
         #create the qualified name to insert into the markunder
-        qualifiedLastName = self.MARK_UNDER_DELIMITER_ENDS + word + self.MARK_UNDER_DELIMITER + lastName + self.MARK_UNDER_DELIMITER_ENDS
+        qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER + word + ' ' + lastName + self.MARK_UNDER_ENDS
 
         return qualifiedLastName
 
@@ -471,8 +472,10 @@ class WordFrequencies:
             self.prefs.GUESS_NAMES = True
         if args.markunder:
             self.prefs.DO_MARK_UNDER = True
-        if args.noMarkunder:
-            self.prefs.DO_MARK_UNDER = False
+            print 'Set DO_MARK_UNDER=True'
+#        if args.noMarkunder:
+#            self.prefs.DO_MARK_UNDER = False
+#            print 'Set DO_MARK_UNDER=False'
 
         self.makeNamesSet()
         self.readFile(fileurl)
@@ -664,6 +667,8 @@ connect this to other things
 
 
 make a gui navigable interface
+
+noMarkUnder isn't utilized
 
 
 Bugs:
