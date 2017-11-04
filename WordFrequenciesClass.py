@@ -17,7 +17,7 @@ class WordFrequencies:
 # Members
 ###############################################################################################
     namesSet = set()
-    wordsDict = {} #{ word : { 'count': count , 'lastDate': last occurence , 'firstDate': first occurence , 'wasUpper': started with uppercase letter } }
+    # wordsDict = {} #{ word : { 'count': count , 'lastDate': last occurence , 'firstDate': first occurence , 'wasUpper': started with uppercase letter } }
     wordDict = WordDict() #TODO: switch to this, and get rid of wordsDict
     namesDict = {} #{ name : ( count , last occurence ) }
     wordsPerDayDict = {} #{ word : { 'count': count , 'lastOccurence': last occurence } } only counts one occurence per day
@@ -162,9 +162,9 @@ class WordFrequencies:
 
             #words
             if self.wordDict.exists(word):
-                self.wordsDict[word] = {'count': self.wordsDict[word]['count'] + 1, 
-                'lastDate': currentDate, 'firstDate': self.wordsDict[word]['firstDate'], 'wasUpper': wasUpper}
-                self.wordDict.addOrReplaceWord(word, )
+                # self.wordsDict[word] = {'count': self.wordsDict[word]['count'] + 1, 
+                # 'lastDate': currentDate, 'firstDate': self.wordsDict[word]['firstDate'], 'wasUpper': wasUpper}
+                self.wordDict.addOrReplaceWord(word, self.wordDict.getCount(word) + 1, currentDate, wasUpper)
 
             else:
                 self.wordDict.addWord(word, 1, currentDate, currentDate, wasUpper) #TODO: wasUpper wasn't there originally
@@ -282,7 +282,7 @@ class WordFrequencies:
                 self.printer.makeOutputPrettyLength(sortedLengthOfEntriesDict[x])
         else: #regular words
             self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
-            sortedWordsDict = sorted(self.wordsDict.items(), key=lambda x: x[1]['count'])
+            sortedWordsDict = self.WordDict.getSortedDictByCount()
             sortedWordsDict.reverse()
             end_num = min(end_num, len(sortedWordsDict))
             for x in xrange(start_num, end_num):
@@ -331,19 +331,17 @@ class WordFrequencies:
 
     def lookupWord(self, args):
         word = args[0]
-        try:
-            self.wordsDict[word]
-        except:
+        if not self.WordDict.exists(word):
             print 'Invalid word'
             return
         print word + ': '
-        print 'First usage: ' + str(self.wordsDict[word]['firstDate'])
-        print 'Last usage: ' + str(self.wordsDict[word]['lastDate'])
-        total_uses = self.wordsDict[word]['count']
+        print 'First usage: ' + str(self.WordDict.getFirstDate(word))
+        print 'Last usage: ' + str(self.WordDict.getLastDate(word))
+        total_uses = self.WordDict.getCount()
         total_days_used = self.wordsPerDayDict[word]['count']
         total_number_of_days = len(self.wordCountOfEntriesDict)
         print 'Total usages: ' + str(total_uses)
-        length = (self.wordsDict[word]['lastDate'] - self.wordsDict[word]['firstDate']).days
+        length = (self.WordDict.getLastDate(word) - self.WordDict.getFirstDate(word)).days
         print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
         print 'Percentage of days with a useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%'

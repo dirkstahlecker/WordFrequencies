@@ -5,4 +5,4 @@ class Preferences:
     REQUIRE_CAPS_FOR_NAMES = True
     VERBOSE = False
     GUESS_NAMES = False
-    DO_MARK_UNDER = True
+    DO_MARK_UNDER = False

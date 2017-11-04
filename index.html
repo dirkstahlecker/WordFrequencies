@@ -3,6 +3,7 @@
   <head>
     <title></title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script type="text/javascript">
     var reader; //GLOBAL File Reader object for demo purpose only
 
@@ -67,7 +68,7 @@
                 console.log('----------');
                 var id = hashCode(m[3]);
                 idList[id] = m[3];
-                txt = txt.replace(m[0], '<span id="' + id + '">' + m[2] + '</span>');
+                txt = txt.replace(m[0], '<span class="' + id + '">' + m[2] + '</span>');
             }
         } while (m);
 
@@ -97,8 +98,11 @@
     function addEventListeners() {
         for (var key in idList)
         {
-            const el = document.getElementById(key);
-            el.addEventListener('click', listener.bind( null, key));
+            const el = $('.' + (key));
+            for (var x = 0; x < el.length; x++)
+            {
+                el[x].addEventListener('click', listener.bind( null, key));
+            }
         }
     }
     function listener(key) {
@@ -125,4 +129,6 @@
 
 <!--
 Need to get punctuation and capitalization into the markup so it can be seen in the html. 
+
+Second occurrences of a name don't work
 -->
