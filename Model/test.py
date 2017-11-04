@@ -21,8 +21,8 @@ class TestUM(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.wf = WordFrequencies()
-        self.wf.mainSetup(argparse.Namespace(file='/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/testjournal1.rtf', 
-            verbosity=False, combineplurals=False))
+        self.wf.mainSetup(argparse.Namespace(file='/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/testjournal1.txt', 
+            verbosity=False, combineplurals=False, guessnames=False, markunder=False))
 
     @classmethod
     def tearDownClass(self):
@@ -31,7 +31,7 @@ class TestUM(unittest.TestCase):
     def test_classVariables(self):
         self.assertEqual(self.wf.firstDate, datetime(2017,1,1))
         self.assertEqual(self.wf.mostRecentDate, datetime(2017,12,31))
-        self.assertEqual(self.wf.namesURL, "/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/names.txt")
+        self.assertEqual(self.wf.namesURL, "/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/model/names.txt")
         self.assertEqual(self.wf.totalNumberOfWords, 51)
 
     def test_journalParsing(self):
@@ -40,11 +40,11 @@ class TestUM(unittest.TestCase):
         self.assertEqual(len(self.wf.namesDict), 3)
 
     def test_wordsDict(self):
-        self.assertEqual(len(self.wf.wordsDict), 17) #total number of words
-        self.assertEqual(self.wf.wordsDict['day']['count'], 9) #word count
+        self.assertEqual(self.wf.wordDict.getNumberOfWords(), 17) #total number of words
+        self.assertEqual(self.wf.wordDict.getCount('day'), 9) #word count
         #dates
-        self.assertEqual(self.wf.wordsDict['day']['firstDate'], datetime(2017,1,1))
-        self.assertEqual(self.wf.wordsDict['day']['lastDate'], datetime(2017,2,5))
+        self.assertEqual(self.wf.wordDict.getFirstDate('day'), datetime(2017,1,1))
+        self.assertEqual(self.wf.wordDict.getLastDate('day'), datetime(2017,2,5))
         #was upper
         #TODO
 
@@ -82,6 +82,13 @@ class TestUM(unittest.TestCase):
             'day                   9       02-05-2017 ', 'sentence              8       02-05-2017 ', 'one                   6       02-05-2017 '])
         self.assertEqual(str(output3), expected)
 
+    def test_lookup(self):
+        with Capturing() as output:
+            self.wf.lookupWord(['cheryl'])
+        expected = str(['cheryl: ', 'First usage: 2017-01-01 00:00:00', 'Last usage: 2017-01-05 00:00:00', 'Total usages: 4', 
+            'Length from first use to last: 0 years, 0 months, 4 days', 'Average usages per day: 1.0', 'Percentage of days with a useage: 57.14%'])
+        self.assertEqual(str(output), expected)
+
     def test_relatedNamesDict(self):
         self.assertEqual(len(self.wf.relatedNamesDict), 3) #total number of names
         self.assertEqual(self.wf.relatedNamesDict['cheryl']['laura'], 2)
@@ -97,13 +104,13 @@ class TestUM(unittest.TestCase):
         self.assertEqual(str(output), expected)
 
     #TODO: re-enable
-    # def test_overall(self):
-    #     with Capturing() as output:
-    #         self.wf.overallAnalytics()
-    #     expected = str(['Total number of entries:  7', 'First entry:  12-01-2014', 'Last entry:  12-31-2017', 'Total days from first to last entry:  1126', 
-    #         'Percentage of days from first to last with an entry:  0.62%', 'Average length per entry:  7.29', 'Longest entry: 14 words on  01-05-2017', 
-    #         'Total number of words written:  51'])
-    #     self.assertEqual(str(output), expected)
+    def test_overall(self):
+        with Capturing() as output:
+            self.wf.overallAnalytics()
+        expected = str(['Total number of entries:  7', 'First entry:  01-01-2017', 'Last entry:  12-31-2017', 'Total days from first to last entry:  364', 
+            'Percentage of days from first to last with an entry:  1.92%', 'Average length per entry:  7.29', 'Longest entry: 14 words on  01-05-2017', 
+            'Total number of words written:  51'])
+        self.assertEqual(str(output), expected)
 
 
 

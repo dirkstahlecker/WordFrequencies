@@ -281,7 +281,7 @@ class WordFrequencies:
                 self.printer.makeOutputPrettyLength(sortedLengthOfEntriesDict[x])
         else: #regular words
             self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
-            sortedWordsDict = self.wordDict.getSortedDictByCount()
+            sortedWordsDict = self.WordDict.getSortedDictByCount()
             sortedWordsDict.reverse()
             end_num = min(end_num, len(sortedWordsDict))
             for x in xrange(start_num, end_num):
@@ -330,17 +330,17 @@ class WordFrequencies:
 
     def lookupWord(self, args):
         word = args[0]
-        if not self.wordDict.exists(word):
+        if not self.WordDict.exists(word):
             print 'Invalid word'
             return
         print word + ': '
-        print 'First usage: ' + str(self.wordDict.getFirstDate(word))
-        print 'Last usage: ' + str(self.wordDict.getLastDate(word))
-        total_uses = self.wordDict.getCount(word)
+        print 'First usage: ' + str(self.WordDict.getFirstDate(word))
+        print 'Last usage: ' + str(self.WordDict.getLastDate(word))
+        total_uses = self.WordDict.getCount()
         total_days_used = self.wordsPerDayDict[word]['count']
         total_number_of_days = len(self.wordCountOfEntriesDict)
         print 'Total usages: ' + str(total_uses)
-        length = (self.wordDict.getLastDate(word) - self.wordDict.getFirstDate(word)).days
+        length = (self.WordDict.getLastDate(word) - self.WordDict.getFirstDate(word)).days
         print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
         print 'Percentage of days with a useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%'

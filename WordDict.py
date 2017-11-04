@@ -85,9 +85,6 @@ class WordDict():
             return False
         return self.internalDict[word]
 
-    def getNumberOfWords(self):
-        return len(self.internalDict)
-
     #returns None if not added successfully
     def getCount(self, word):
         if self.exists(word):
