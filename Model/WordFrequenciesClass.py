@@ -11,16 +11,17 @@ from PrintHelper import PrintHelper
 import locale
 import hashlib
 from WordDict import WordDict
+from WordsPerDayDict import WordsPerDayDict
 
 class WordFrequencies:
 ###############################################################################################
 # Members
 ###############################################################################################
     namesSet = set()
-    # wordsDict = {} #{ word : { 'count': count , 'lastDate': last occurence , 'firstDate': first occurence , 'wasUpper': started with uppercase letter } }
-    wordDict = WordDict() #TODO: switch to this, and get rid of wordsDict
+    wordDict = WordDict()
     namesDict = {} #{ name : ( count , last occurence ) }
-    wordsPerDayDict = {} #{ word : { 'count': count , 'lastOccurence': last occurence } } only counts one occurence per day
+    # wordsPerDayDict = {} #{ word : { 'count': count , 'lastOccurence': last occurence } } only counts one occurence per day
+    wordsPerDayDict = WordsPerDayDict()
     namesPerDayDict = {} #{ word : ( count , last occurence ) }
     namesToGraphDict = {} #{ word : [ [ date , count ] ] }
     namesToGraphDictUniqueOccurences = {} #{ word : [ date ] }
@@ -47,7 +48,6 @@ class WordFrequencies:
 ###############################################################################################
 # Loading and Setup
 ###############################################################################################    
-
 
     #only called for names
     #ask which name it is, store it in a markup format, and compute a hash of the day
@@ -91,7 +91,6 @@ class WordFrequencies:
         qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER + originalWord + ' ' + lastName + self.MARK_UNDER_ENDS
 
         return qualifiedLastName
-
 
         #need to actually do something to associate the info the user entered with the specific instance of the name
 
@@ -164,16 +163,21 @@ class WordFrequencies:
             if self.wordDict.exists(word):
                 # self.wordsDict[word] = {'count': self.wordsDict[word]['count'] + 1, 
                 # 'lastDate': currentDate, 'firstDate': self.wordsDict[word]['firstDate'], 'wasUpper': wasUpper}
-                self.wordDict.addOrReplaceWord(word, self.wordDict.getCount(word) + 1, currentDate, self.wordDict.getFirstDate(word), wasUpper)
+                self.wordDict.addOrReplaceWord(word, self.wordDict.getCount(word) + 1, currentDate, self.wordDict.getFirstOccurrence(word), wasUpper)
             else:
                 self.wordDict.addWord(word, 1, currentDate, currentDate, wasUpper) #TODO: wasUpper wasn't there originally
             
             #words per day
-            try:
-                if self.wordsPerDayDict[word]['lastOccurence'] != currentDate:
-                    self.wordsPerDayDict[word] = {'count': self.wordsPerDayDict[word]['count'] + 1, 'lastOccurence': currentDate}
-            except:
-                    self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
+            # try:
+            #     if self.wordsPerDayDict.getLastOccurrence(word) != currentDate:
+            #         self.wordsPerDayDict[word] = {'count': self.wordsPerDayDict[word]['count'] + 1, 'lastOccurence': currentDate}
+            # except:
+            #         self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
+
+            if self.wordsPerDayDict.exists(word):
+                self.wordsPerDayDict.addWord(word, self.wordsPerDayDict.getCount(word), currentDate) #TODO: was addOrReplaceWord, need to think what it should be
+            else:
+                self.wordsPerDayDict(word, 1, currentDate)
 
             if self.prefs.DO_MARK_UNDER:
                 #if it's a name, qualify it for the markunder
@@ -259,7 +263,7 @@ class WordFrequencies:
             for x in xrange(start_num, end_num):
                 self.printer.makeOutputPrettyRelated(sortedRelatedNamesDict[x])
         elif option == 'wordsPerDay':
-            sortedWordsPerDayDict = sorted(self.wordsPerDayDict.items(), key=lambda x: x[1]['count'])
+            sortedWordsPerDayDict = self.wordsPerDayDict.getSortedDictByCount()
             sortedWordsPerDayDict.reverse()
             end_num = min(end_num, len(sortedWordsPerDayDict))
             self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
@@ -334,13 +338,13 @@ class WordFrequencies:
             print 'Invalid word'
             return
         print word + ': '
-        print 'First usage: ' + str(self.wordDict.getFirstDate(word))
-        print 'Last usage: ' + str(self.wordDict.getLastDate(word))
+        print 'First usage: ' + str(self.wordDict.getFirstOccurrence(word))
+        print 'Last usage: ' + str(self.wordDict.getLastOccurrence(word))
         total_uses = self.wordDict.getCount(word)
-        total_days_used = self.wordsPerDayDict[word]['count']
+        total_days_used = self.wordsPerDayDict.getCount(word)
         total_number_of_days = len(self.wordCountOfEntriesDict)
         print 'Total usages: ' + str(total_uses)
-        length = (self.wordDict.getLastDate(word) - self.wordDict.getFirstDate(word)).days
+        length = (self.wordDict.getLastOccurrence(word) - self.wordDict.getFirstOccurrence(word)).days
         print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
         print 'Average usages per day: ' + str(float(total_uses) / length)
         print 'Percentage of days with a useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%'

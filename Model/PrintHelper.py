@@ -80,7 +80,7 @@ class PrintHelper:
     def makeOutputPrettyWordsDict(self, inp): #( word : { 'count': count, 'lastDate': last occurence, 'firstDate': first occurence } )
         word = inp[0]
         count = inp[1]['count']
-        date = inp[1]['lastDate']
+        date = inp[1]['lastOccurrence']
         self.makeOutputPrettyHelper(word, count, date)
 
     

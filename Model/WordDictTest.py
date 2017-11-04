@@ -24,7 +24,7 @@ class TestUM(unittest.TestCase):
 
     def test_addWordNoConflicts(self):
         self.assertEqual(self.wd.getCount('word1'), 1)
-        self.assertEqual(self.wd.getFirstDate('word1'), date)
+        self.assertEqual(self.wd.getFirstOccurrence('word1'), date)
 
     def test_incrementCount(self):
         self.wd.incrementCount('word1')

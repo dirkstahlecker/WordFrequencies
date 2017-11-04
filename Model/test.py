@@ -43,8 +43,8 @@ class TestUM(unittest.TestCase):
         self.assertEqual(self.wf.wordDict.getNumberOfWords(), 17) #total number of words
         self.assertEqual(self.wf.wordDict.getCount('day'), 9) #word count
         #dates
-        self.assertEqual(self.wf.wordDict.getFirstDate('day'), datetime(2017,1,1))
-        self.assertEqual(self.wf.wordDict.getLastDate('day'), datetime(2017,2,5))
+        self.assertEqual(self.wf.wordDict.getFirstOccurrence('day'), datetime(2017,1,1))
+        self.assertEqual(self.wf.wordDict.getLastOccurrence('day'), datetime(2017,2,5))
         #was upper
         #TODO
 
@@ -103,7 +103,6 @@ class TestUM(unittest.TestCase):
             'dirk                  3       ', 'laura                 2       '])
         self.assertEqual(str(output), expected)
 
-    #TODO: re-enable
     def test_overall(self):
         with Capturing() as output:
             self.wf.overallAnalytics()
