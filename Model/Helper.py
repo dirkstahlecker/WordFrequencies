@@ -11,8 +11,10 @@ class Helper:
         return str(years) + ' years, ' + str(months) + ' months, ' + str(days) + ' days'
 
     @staticmethod
-    def cleanWord(word):
-        word = word.strip().lstrip().lower();
+    def cleanWord(word, preserveCapitalization = False):
+        word = word.strip().lstrip();
+        if not preserveCapitalization:
+            word = word.lower()
         regex = re.compile('([\w|-|\']*)')
         match = regex.match(word)
         word = match.group(0)

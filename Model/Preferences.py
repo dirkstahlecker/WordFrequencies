@@ -1,6 +1,5 @@
 class Preferences:
-    #When true, counts "word", "words", and "word's" as equivalent
-    COMBINE_PLURALS = True
+    COMBINE_PLURALS = False #When true, counts "word", "words", and "word's" as equivalent
     DEBUG = False
     REQUIRE_CAPS_FOR_NAMES = True
     VERBOSE = False

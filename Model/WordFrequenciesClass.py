@@ -12,6 +12,39 @@ import locale
 import hashlib
 from WordDict import WordDict
 from WordsPerDayDict import WordsPerDayDict
+from enum import Enum
+
+class PrintOption(Enum):
+    HIGHEST = 1
+    LOOKUP = 2
+    NAMES = 'names'
+    RELATED = 4
+    GRAPH = 5
+    GRAPHENTRIES = 6
+    WORDSPERDAY = 7
+    NAMESPERDAY = 8
+    ADDNAME = 9
+    OPTION = 10
+    LENGTH = 11
+    GRAPHLENGTH = 12
+    OVERALL = 13
+    EXIT = 14
+
+class InputOption(Enum):
+    HIGHEST = 'highest'
+    WPD = 'wpd'
+    LOOKUP = 'lookup'
+    NAMES = 'names'
+    RELATED = 'related'
+    NPD = 'npd'
+    GRAPH = 'graph'
+    GRAPH_ENTRIES = 'graphentries'
+    GRAPH_LENGTH = 'graphlength'
+    ADDNAME = 'addname'
+    OPTION = 'option'
+    LENGTH = 'length'
+    OVERALL = 'overall'
+    EXIT = 'exit'
 
 class WordFrequencies:
 ###############################################################################################
@@ -41,7 +74,7 @@ class WordFrequencies:
     printer = PrintHelper(prefs)
 
     MARK_UNDER_START = '[!!'
-    MARK_UNDER_ENDS = '!!]'
+    MARK_UNDER_END = '!!]'
     MARK_UNDER_DELIMITER = '|'
 
 
@@ -54,29 +87,26 @@ class WordFrequencies:
 
     #return either the word unchanged, or the qualified name if it's a name
     def getMarkUnderWord(self, word, originalWord, line, date):
-        print '\n\n\n'
-        print Helper.prettyPrintDate(date)
-        print line #gives context so you can figure out what's going on
-        print 'Which ' + originalWord + ' is this?'
+        print('\n\n\n')
+        print((Helper.prettyPrintDate(date)))
+        print(line) #gives context so you can figure out what's going on
+        print('Which ' + word + ' is this?') #TODO: want this name to be capitalized
         numPossibleLastNames = 0
 
         try:
             self.lastNamesForFirstNameDict[word] #trigger exception if there's one to be thrown
             for nameFromDict in self.lastNamesForFirstNameDict[word]:
-                print str(numPossibleLastNames) + ': ' + nameFromDict
+                print(str(numPossibleLastNames) + ': ' + nameFromDict)
                 numPossibleLastNames = numPossibleLastNames + 1
-            print 'Or type new last name'
+            print('Or type new last name')
         except:
-            print 'Type last name:'
-
+            print('Type last name:')
 
         #get the last name either from the number of the choice (if it's a number) or the last name that was directly entered
         lastName = ''
-        choice = raw_input('>')
-        # originalLastName = choice
-        # choice = Helper.cleanInput(choice)
+        choice = input('>')
         lastName = choice
-        for x in xrange(0, numPossibleLastNames):
+        for x in range(0, numPossibleLastNames):
             if choice == str(x):
                 lastName = self.lastNamesForFirstNameDict[word][x]
                 break
@@ -88,7 +118,7 @@ class WordFrequencies:
             self.lastNamesForFirstNameDict[word] = [lastName]
 
         #create the qualified name to insert into the markunder
-        qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER + originalWord + ' ' + lastName + self.MARK_UNDER_ENDS
+        qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER + Helper.cleanWord(originalWord, True) + ' ' + lastName + self.MARK_UNDER_END
 
         return qualifiedLastName
 
@@ -106,10 +136,13 @@ class WordFrequencies:
     def addLine(self, line, currentDate):
         markunderFile = open(self.markUnderFilePath, 'a')
 
+        # words = line.split('\[!!([^!]+)!!\]| ')
         words = line.split(' ')
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
         namesFound = set()
         for word in words:
+            if word == '':
+                continue
 
             if self.prefs.COMBINE_PLURALS:
                 if word.endswith("'s"):
@@ -121,7 +154,7 @@ class WordFrequencies:
             if word[:1].isupper():
                 wasUpper = True;
             originalWord = word
-            word = Helper.cleanWord(word)
+            word = Helper.cleanWord(word) #this strips off all punctuation and other information that we want to pass into markup.
 
             if not Helper.valid(word):
                 continue
@@ -181,7 +214,7 @@ class WordFrequencies:
 
             if self.prefs.DO_MARK_UNDER:
                 #if it's a name, qualify it for the markunder
-                if word  in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
+                if word in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
                     markUnderWord = self.getMarkUnderWord(word, originalWord, line, currentDate)
                 else:
                     markUnderWord = word
@@ -200,19 +233,19 @@ class WordFrequencies:
     #TODO: it would be nice to move at least part of this function to the printer class
     def printHighest(self, args, option):
         if self.prefs.VERBOSE:
-            print 'args: ',
-            print args
-            print 'option: ',
-            print option
+            print('args: ', end=' ')
+            print(args)
+            print('option: ', end=' ')
+            print(option)
 
         if option == 'namesRelated':
             nameForRelated = args[0]
             args = args[1:]
             if len(args) < 1:
-                print 'Too few arguments.'
+                print('Too few arguments.')
                 return
             if self.prefs.VERBOSE:
-                print 'nameForRelated: ' + nameForRelated
+                print('nameForRelated: ' + nameForRelated)
 
         start_num = 0
         end_num = 0
@@ -226,7 +259,7 @@ class WordFrequencies:
                 else:
                     end_num = int(args[index1])
             except:
-                print 'Invalid arguments'
+                print('Invalid arguments')
                 return
         elif len(args) >= 2: #start and end
             try:
@@ -236,59 +269,59 @@ class WordFrequencies:
                 else:
                     end_num = int(args[index2])
             except:
-                print 'Invalid arguments'
+                print('Invalid arguments')
                 return
 
         if self.prefs.VERBOSE:
-            print 'start_num: ',
-            print start_num,
-            print ' end_num ',
-            print end_num
+            print('start_num: ', end=' ')
+            print(start_num, end=' ')
+            print(' end_num ', end=' ')
+            print(end_num)
 
         #TODO: add headers to all cases
-        if option == 'names':
-            sortedNamesDict = sorted(self.namesDict.items(), key=operator.itemgetter(1))
+        if option == PrintOption.NAMES:
+            sortedNamesDict = sorted(list(self.namesDict.items()), key=operator.itemgetter(1))
             sortedNamesDict.reverse()
             end_num = min(end_num, len(sortedNamesDict))
             self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
-            for x in xrange(start_num, end_num):
+            for x in range(start_num, end_num):
                 self.printer.makeOutputPretty(sortedNamesDict[x])
-        elif option == 'namesRelated':
+        elif option == PrintOption.RELATED:
             #TODO: deal with 'all' here, since it won't be caught earlier
-            sortedRelatedNamesDict = sorted(self.relatedNamesDict[nameForRelated].items(), key=operator.itemgetter(1))
+            sortedRelatedNamesDict = sorted(list(self.relatedNamesDict[nameForRelated].items()), key=operator.itemgetter(1))
             sortedRelatedNamesDict.reverse()
-            print 'Related names for ' + nameForRelated + ':\n'
+            print('Related names for ' + nameForRelated + ':\n')
             self.printer.makePrettyHeader('Name', 'Count')
             end_num = min(end_num, len(sortedRelatedNamesDict))
-            for x in xrange(start_num, end_num):
+            for x in range(start_num, end_num):
                 self.printer.makeOutputPrettyRelated(sortedRelatedNamesDict[x])
-        elif option == 'wordsPerDay':
+        elif option == PrintOption.WORDSPERDAY:
             sortedWordsPerDayDict = self.wordsPerDayDict.getSortedDictByCount()
             sortedWordsPerDayDict.reverse()
             end_num = min(end_num, len(sortedWordsPerDayDict))
             self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
-            for x in xrange(start_num, end_num):
+            for x in range(start_num, end_num):
                 self.printer.makeOutputPrettyWPD(sortedWordsPerDayDict[x])
-        elif option == 'namesPerDay':
-            sortedNamesPerDayDict = sorted(self.namesPerDayDict.items(), key=operator.itemgetter(1))
+        elif option == PrintOption.NAMESPERDAY:
+            sortedNamesPerDayDict = sorted(list(self.namesPerDayDict.items()), key=operator.itemgetter(1))
             sortedNamesPerDayDict.reverse()
             end_num = min(end_num, len(sortedNamesPerDayDict))
             self.printer.makePrettyHeader('Name', 'Count', 'Last Occurence')
-            for x in xrange(start_num, end_num):
+            for x in range(start_num, end_num):
                 self.printer.makeOutputPretty(sortedNamesPerDayDict[x])
-        elif option == 'length':
-            sortedLengthOfEntriesDict = sorted(self.wordCountOfEntriesDict.items(), key=operator.itemgetter(1))
+        elif option == PrintOption.LENGTH:
+            sortedLengthOfEntriesDict = sorted(list(self.wordCountOfEntriesDict.items()), key=operator.itemgetter(1))
             sortedLengthOfEntriesDict.reverse()
             end_num = min(end_num, len(sortedLengthOfEntriesDict))
             self.printer.makePrettyHeader('Date', 'Count')
-            for x in xrange(start_num, end_num):
+            for x in range(start_num, end_num):
                 self.printer.makeOutputPrettyLength(sortedLengthOfEntriesDict[x])
         else: #regular words
             self.printer.makePrettyHeader('Word', 'Count', 'Last Occurence')
             sortedWordsDict = self.wordDict.getSortedDictByCount()
             sortedWordsDict.reverse()
             end_num = min(end_num, len(sortedWordsDict))
-            for x in xrange(start_num, end_num):
+            for x in range(start_num, end_num):
                 self.printer.makeOutputPrettyWordsDict(sortedWordsDict[x])
 
 
@@ -299,7 +332,7 @@ class WordFrequencies:
         try:
             self.namesToGraphDict[name]
         except:
-            print 'Invalid input - must be a valid name'
+            print('Invalid input - must be a valid name')
             return
         try:
             x = [date[0] for date in self.namesToGraphDict[name]]
@@ -311,12 +344,12 @@ class WordFrequencies:
 
             plt.show()
         except:
-            print 'Unknown error occured while graphing'
+            print('Unknown error occured while graphing')
 
     #graphs a bar for each day that an entry exists
     def graphEntries(self, args):
         #{ date : word count }
-        sortedLengthOfEntriesDict = sorted(self.wordCountOfEntriesDict.items(), key=operator.itemgetter(1))
+        sortedLengthOfEntriesDict = sorted(list(self.wordCountOfEntriesDict.items()), key=operator.itemgetter(1))
         x = [i[0] for i in sortedLengthOfEntriesDict]
         y = [1 for j in sortedLengthOfEntriesDict]
         self.graphHelper(x, y)
@@ -328,55 +361,55 @@ class WordFrequencies:
         plt.show()
 
     def graphNameValue(self, in_dict):
-        x = in_dict.keys()
-        y = in_dict.values()
+        x = list(in_dict.keys())
+        y = list(in_dict.values())
         self.graphHelper(x, y)
 
     def lookupWord(self, args):
         word = args[0]
         if not self.wordDict.exists(word):
-            print 'Invalid word'
+            print('Invalid word')
             return
-        print word + ': '
-        print 'First usage: ' + str(self.wordDict.getFirstOccurrence(word))
-        print 'Last usage: ' + str(self.wordDict.getLastOccurrence(word))
+        print(word + ': ')
+        print('First usage: ' + str(self.wordDict.getFirstOccurrence(word)))
+        print('Last usage: ' + str(self.wordDict.getLastOccurrence(word)))
         total_uses = self.wordDict.getCount(word)
         total_days_used = self.wordsPerDayDict.getCount(word)
         total_number_of_days = len(self.wordCountOfEntriesDict)
-        print 'Total usages: ' + str(total_uses)
+        print('Total usages: ' + str(total_uses))
         length = (self.wordDict.getLastOccurrence(word) - self.wordDict.getFirstOccurrence(word)).days
-        print 'Length from first use to last: ' + Helper.daysAsPrettyLength(length)
-        print 'Average usages per day: ' + str(float(total_uses) / length)
-        print 'Percentage of days with a useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%'
+        print('Length from first use to last: ' + Helper.daysAsPrettyLength(length))
+        print('Average usages per day: ' + str(float(total_uses) / length))
+        print('Percentage of days with a useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%')
 
     def overallAnalytics(self):
-        print 'Total number of entries: ',
-        print len(self.wordCountOfEntriesDict)
-        print 'First entry: ',
-        print Helper.prettyPrintDate(self.firstDate)
-        print 'Last entry: ',
-        print Helper.prettyPrintDate(self.mostRecentDate)
-        print 'Total days from first to last entry: ',
+        print('Total number of entries: ', end=' ')
+        print(len(self.wordCountOfEntriesDict))
+        print('First entry: ', end=' ')
+        print(Helper.prettyPrintDate(self.firstDate))
+        print('Last entry: ', end=' ')
+        print(Helper.prettyPrintDate(self.mostRecentDate))
+        print('Total days from first to last entry: ', end=' ')
         totalDays = self.mostRecentDate - self.firstDate #this is correct
         days = totalDays.days
-        print days
-        print 'Percentage of days from first to last with an entry: ',
-        print str(round(float(len(self.wordCountOfEntriesDict)) / days * 100, 2)) + '%'
-        print 'Average length per entry: ',
+        print(days)
+        print('Percentage of days from first to last with an entry: ', end=' ')
+        print(str(round(float(len(self.wordCountOfEntriesDict)) / days * 100, 2)) + '%')
+        print('Average length per entry: ', end=' ')
         numberOfEntries = len(self.wordCountOfEntriesDict)
         sumOfLengths = 0
         longestEntryLength = 0
-        for date in self.wordCountOfEntriesDict.keys():
+        for date in list(self.wordCountOfEntriesDict.keys()):
             length = self.wordCountOfEntriesDict[date]
             if length > longestEntryLength:
                 longestEntryLength = length
                 longestEntryDate = date
             sumOfLengths += length 
-        print round(float(sumOfLengths) / numberOfEntries, 2)
-        print 'Longest entry: ' + str(longestEntryLength) + ' words on ',
-        print Helper.prettyPrintDate(longestEntryDate)
-        print 'Total number of words written: ',
-        print locale.format("%d", self.totalNumberOfWords, grouping=True)
+        print(round(float(sumOfLengths) / numberOfEntries, 2))
+        print('Longest entry: ' + str(longestEntryLength) + ' words on ', end=' ')
+        print(Helper.prettyPrintDate(longestEntryDate))
+        print('Total number of words written: ', end=' ')
+        print(locale.format("%d", self.totalNumberOfWords, grouping=True))
 
 
 
@@ -413,12 +446,12 @@ class WordFrequencies:
     #try to guess what is a name by looking for capitalized letters in the middle of sentences
     def getGuessedNames(self):
         newNames = set()
-        print 'Are these names? (y/n)'
-        print self.guessedNamesSet
+        print('Are these names? (y/n)')
+        print(self.guessedNamesSet)
         for name in self.guessedNamesSet:
             if name in self.namesSet:
                 break
-            inp = raw_input(name + ': ')
+            inp = input(name + ': ')
             if inp == 'y':
                 newNames.add(name.lower())
 
@@ -442,11 +475,11 @@ class WordFrequencies:
     def addName(self, args):
         name = args[0]
         if name in self.namesDict:
-            print "Name already added"
+            print("Name already added")
             return
         self.namesSet.add(name);
         f = open(self.namesURL, 'a')
-        f.write(name + '\n')
+        f.write('\n' + name)
         f.close()
 
     def removeName(self, name):
@@ -478,7 +511,7 @@ class WordFrequencies:
             self.prefs.GUESS_NAMES = True
         if args.markunder:
             self.prefs.DO_MARK_UNDER = True
-            print 'Set DO_MARK_UNDER=True'
+            print('Set DO_MARK_UNDER=True')
 #        if args.noMarkunder:
 #            self.prefs.DO_MARK_UNDER = False
 #            print 'Set DO_MARK_UNDER=False'
@@ -490,7 +523,7 @@ class WordFrequencies:
         if self.prefs.GUESS_NAMES:
             self.getGuessedNames()
         while True:
-            print '''
+            print('''
     Options:
     Highest x words             highest [num | all] (num | all)
     Highest x words per day     wpd [num | all]
@@ -506,8 +539,8 @@ class WordFrequencies:
     Length                      length [num | all]
     Overall analytics           overall
     Exit                        exit
-    '''
-            if not self.parseInput(raw_input('>')):
+    ''')
+            if not self.parseInput(input('>')):
                 return
 
     def parseInput(self, inpStr):
@@ -515,7 +548,7 @@ class WordFrequencies:
         command = parts[0].lower().strip().lstrip()
         args = parts[1:]
         if (self.prefs.VERBOSE):
-            print 'Parsed arguments: command: ' + str(command) + ' args: ' + str(args)
+            print('Parsed arguments: command: ' + str(command) + ' args: ' + str(args))
         return self.callInputFunction(command, args)
 
     def readFile(self, url):
@@ -523,7 +556,7 @@ class WordFrequencies:
             f = open(url, 'r')
         except:
             print('File not found')
-            newPath = raw_input('Enter new path > ');
+            newPath = input('Enter new path > ');
             self.readFile(newPath) #TODO: this doesn't work for entirely unknown reasons
             return
 
@@ -577,38 +610,39 @@ class WordFrequencies:
 
     #args is a list of arguments in order
     def callInputFunction(self, inp, args):
-        if inp == 'highest':
+        if inp == InputOption.HIGHEST.value:
             self.printHighest(args, None)
-        elif inp == 'lookup':
+        elif inp == InputOption.LOOKUP.value:
             self.lookupWord(args)
-        elif inp == 'names':
-            self.printHighest(args, 'names')
-        elif inp == 'related':
-            self.printHighest(args, 'namesRelated')
-        elif inp == 'graph':
+        elif inp == InputOption.NAMES.value:
+            self.printHighest(args, PrintOption.NAMES)
+        elif inp == InputOption.RELATED.value:
+            self.printHighest(args, PrintOption.RELATED)
+        elif inp == InputOption.GRAPH.value:
             self.graphAnalytics(args)
-        elif inp == 'graphentries':
+        elif inp == InputOption.GRAPH_ENTRIES.value:
             self.graphEntries(args)
         # elif inp == 'gpd':
         #     self.graphAnalyticsPerDay(args)
-        elif inp == 'wpd':
-            self.printHighest(args, 'wordsPerDay')
-        elif inp == 'npd':
-            self.printHighest(args, 'namesPerDay')
-        elif inp == 'addname':
+        elif inp == InputOption.WPD.value:
+            self.printHighest(args, PrintOption.WORDSPERDAY)
+        elif inp == InputOption.NPD.value:
+            self.printHighest(args, PrintOption.NAMESPERDAY)
+        elif inp == InputOption.ADDNAME.value:
             self.addName(args)
-        elif inp == 'option':
+        elif inp == InputOption.OPTION.value:
+            print("Setting options isn't supported yet")
             pass
-        elif inp == 'length':
-            self.printHighest(args, 'length')
-        elif inp == 'graphlength':
+        elif inp == InputOption.LENGTH.value:
+            self.printHighest(args, PrintOption.LENGTH)
+        elif inp == InputOption.GRAPH_LENGTH.value:
             self.graphNameValue(self.wordCountOfEntriesDict)
-        elif inp == 'overall':
+        elif inp == InputOption.OVERALL.value:
             self.overallAnalytics()
-        elif inp == 'exit':
+        elif inp == InputOption.EXIT.value:
             return False
         else:
-            print 'Unknown command.'
+            print('Unknown command.')
         return True
 
 ###############################################################################################
@@ -681,5 +715,6 @@ Bugs:
 fix axes on graphing
 firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's the first date in there (but test case works)
 days are off by one
+related is broken
 
 '''
