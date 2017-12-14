@@ -18,28 +18,28 @@ class PrintHelper:
     #date is a datetime object
     def makeOutputPrettyHelper(self, word, count, date):
         if len(word) <= self.WORD_COL_WIDTH:
-            print(word)
+            print(word, end='')
             chars_left = self.WORD_COL_WIDTH - len(word)
-            print(' ' * chars_left)
+            print(' ' * chars_left, end='')
         else:
-            print(word[:self.WORD_COL_WIDTH]),
+            print(word[:self.WORD_COL_WIDTH], end="")
 
         #TODO: deal with overshoot on numbers and date
-        print(count),
-        print(' ' * (self.NUM_COL_WIDTH - len(str(count)))),
+        print(count, end="")
+        print(' ' * (self.NUM_COL_WIDTH - len(str(count))), end="")
 
         if date != None:
             date = Helper.prettyPrintDate(date)
-            print(date),
+            print(date, end="")
             print(' ' * (self.DATE_COL_WIDTH - len(str(date))))
         else:
             print('')
 
     def makePrettyHeader(self, col1name, col2name = '', col3name = ''):
         print(col1name, end='')
-        print(' ' * (self.WORD_COL_WIDTH - 4))
-        print(col2name)
-        print(' ' * (self.NUM_COL_WIDTH - 5))
+        print(' ' * (self.WORD_COL_WIDTH - 4), end='')
+        print(col2name, end='')
+        print(' ' * (self.NUM_COL_WIDTH - 5), end='')
         print(col3name)
         print('-'*(self.WORD_COL_WIDTH + self.NUM_COL_WIDTH + self.DATE_COL_WIDTH)) #38
 
@@ -60,14 +60,14 @@ class PrintHelper:
         count = inp[1]
 
         if len(str(date)) <= self.WORD_COL_WIDTH:
-            print(date),
+            print(date, end="")
             chars_left = self.WORD_COL_WIDTH - len(str(date))
-            print(' ' * chars_left),
+            print(' ' * chars_left, end="")
         else:
-            print(date[:self.WORD_COL_WIDTH]),
+            print(date[:self.WORD_COL_WIDTH], end="")
 
         #TODO: deal with overshoot on numbers and date
-        print(count),
+        print(count, end="")
         print(' ' * (self.NUM_COL_WIDTH - len(str(count))))
 
     #inp comes in as a tuple due to the sorting and the fact that dicts can't be sorted

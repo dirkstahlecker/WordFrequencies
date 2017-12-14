@@ -238,7 +238,7 @@ class WordFrequencies:
             print('option: ', end=' ')
             print(option)
 
-        if option == 'namesRelated':
+        if option == PrintOption.RELATED:
             nameForRelated = args[0]
             args = args[1:]
             if len(args) < 1:
