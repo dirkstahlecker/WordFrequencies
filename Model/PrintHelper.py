@@ -60,6 +60,7 @@ class PrintHelper:
         count = inp[1]
 
         if len(str(date)) <= self.WORD_COL_WIDTH:
+            date = Helper.prettyPrintDate(date)
             print(date, end="")
             chars_left = self.WORD_COL_WIDTH - len(str(date))
             print(' ' * chars_left, end="")

@@ -14,10 +14,11 @@ from WordDict import WordDict
 from WordsPerDayDict import WordsPerDayDict
 from enum import Enum
 
+#Enum to carry the different settings for printing
 class PrintOption(Enum):
     HIGHEST = 1
     LOOKUP = 2
-    NAMES = 'names'
+    NAMES = 3
     RELATED = 4
     GRAPH = 5
     GRAPHENTRIES = 6
@@ -30,7 +31,8 @@ class PrintOption(Enum):
     OVERALL = 13
     EXIT = 14
 
-class InputOption(Enum):
+#Enum to carry the different commands the user can type
+class CommandOptions(Enum):
     HIGHEST = 'highest'
     WPD = 'wpd'
     LOOKUP = 'lookup'
@@ -125,8 +127,6 @@ class WordFrequencies:
         #need to actually do something to associate the info the user entered with the specific instance of the name
 
 
-
-
 ###############################################################################################
 # Data Processing
 ###############################################################################################
@@ -136,12 +136,13 @@ class WordFrequencies:
     def addLine(self, line, currentDate):
         markunderFile = open(self.markUnderFilePath, 'a')
 
-        # words = line.split('\[!!([^!]+)!!\]| ')
-        words = line.split(' ')
+        exp = re.compile("\[!![^!]+!!\]|\s")
+        words = exp.split(line)
+
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
         namesFound = set()
         for word in words:
-            if word == '':
+            if word == '' or word == None:
                 continue
 
             if self.prefs.COMBINE_PLURALS:
@@ -442,6 +443,7 @@ class WordFrequencies:
         while line != '':
             self.namesSet.add(line.strip().lower()) #TODO: does this do anything? What?
             line = f.readline()
+        f.close()
 
     #try to guess what is a name by looking for capitalized letters in the middle of sentences
     def getGuessedNames(self):
@@ -610,36 +612,36 @@ class WordFrequencies:
 
     #args is a list of arguments in order
     def callInputFunction(self, inp, args):
-        if inp == InputOption.HIGHEST.value:
+        if inp == CommandOptions.HIGHEST.value:
             self.printHighest(args, None)
-        elif inp == InputOption.LOOKUP.value:
+        elif inp == CommandOptions.LOOKUP.value:
             self.lookupWord(args)
-        elif inp == InputOption.NAMES.value:
+        elif inp == CommandOptions.NAMES.value:
             self.printHighest(args, PrintOption.NAMES)
-        elif inp == InputOption.RELATED.value:
+        elif inp == CommandOptions.RELATED.value:
             self.printHighest(args, PrintOption.RELATED)
-        elif inp == InputOption.GRAPH.value:
+        elif inp == CommandOptions.GRAPH.value:
             self.graphAnalytics(args)
-        elif inp == InputOption.GRAPH_ENTRIES.value:
+        elif inp == CommandOptions.GRAPH_ENTRIES.value:
             self.graphEntries(args)
         # elif inp == 'gpd':
         #     self.graphAnalyticsPerDay(args)
-        elif inp == InputOption.WPD.value:
+        elif inp == CommandOptions.WPD.value:
             self.printHighest(args, PrintOption.WORDSPERDAY)
-        elif inp == InputOption.NPD.value:
+        elif inp == CommandOptions.NPD.value:
             self.printHighest(args, PrintOption.NAMESPERDAY)
-        elif inp == InputOption.ADDNAME.value:
+        elif inp == CommandOptions.ADDNAME.value:
             self.addName(args)
-        elif inp == InputOption.OPTION.value:
+        elif inp == CommandOptions.OPTION.value:
             print("Setting options isn't supported yet")
             pass
-        elif inp == InputOption.LENGTH.value:
+        elif inp == CommandOptions.LENGTH.value:
             self.printHighest(args, PrintOption.LENGTH)
-        elif inp == InputOption.GRAPH_LENGTH.value:
+        elif inp == CommandOptions.GRAPH_LENGTH.value:
             self.graphNameValue(self.wordCountOfEntriesDict)
-        elif inp == InputOption.OVERALL.value:
+        elif inp == CommandOptions.OVERALL.value:
             self.overallAnalytics()
-        elif inp == InputOption.EXIT.value:
+        elif inp == CommandOptions.EXIT.value:
             return False
         else:
             print('Unknown command.')
@@ -698,7 +700,6 @@ have a reverse order flag of some sort (allow to view in ascending order rather 
 
 allow option to filter by dates
 
-
 connect this to other things
     step counter 
     google location
@@ -709,6 +710,8 @@ connect this to other things
 make a gui navigable interface
 
 noMarkUnder isn't utilized
+
+preserver capitalization and punctuation
 
 
 Bugs:

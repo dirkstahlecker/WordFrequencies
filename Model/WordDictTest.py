@@ -4,7 +4,7 @@ import unittest
 from WordFrequenciesClass import WordFrequencies
 from datetime import datetime
 import argparse
-from cStringIO import StringIO
+from io import StringIO
 import sys
 
 date = Helper.makeDateObject('10-12-17')
