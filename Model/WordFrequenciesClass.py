@@ -13,6 +13,7 @@ import hashlib
 from WordDict import WordDict
 from WordsPerDayDict import WordsPerDayDict
 from enum import Enum
+from WordClass import WordClass
 
 #Enum to carry the different settings for printing
 class PrintOption(Enum):
@@ -144,6 +145,17 @@ class WordFrequencies:
         for word in words:
             if word == '' or word == None:
                 continue
+
+            # word = WordClass(word)
+
+
+
+
+            if not re.compile('[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]').search(word): #doesn't contain a letter, so assume puntuation
+                continue
+            #TODO: this doesn't catch anything other than a single punctuation mark at the end
+            if re.compile('[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]$').search(word): #TODO: this isn't working
+                word = word[:-1]
 
             if self.prefs.COMBINE_PLURALS:
                 if word.endswith("'s"):
@@ -559,8 +571,7 @@ class WordFrequencies:
         except:
             print('File not found')
             newPath = input('Enter new path > ');
-            self.readFile(newPath) #TODO: this doesn't work for entirely unknown reasons
-            return
+            return self.readFile(newPath) #TODO: this doesn't work for entirely unknown reasons
 
         newdate = re.compile('\s*([0-9]{1,2}-[0-9]{1,2}-[0-9]{2})\s*')
         currentDateStr = None
@@ -654,6 +665,7 @@ class WordFrequencies:
 if __name__ == '__main__':
     wf = WordFrequencies()
 
+    #TODO: integrate this into the word frequencies class itself
     parser = argparse.ArgumentParser()
     parser.add_argument('file', help='Path to file to examine')
     parser.add_argument('-v', '--verbosity', action='store_true', help='Enable verbose output')
@@ -712,6 +724,8 @@ make a gui navigable interface
 noMarkUnder isn't utilized
 
 preserver capitalization and punctuation
+
+lookup - length from first to last is wrong
 
 
 Bugs:
