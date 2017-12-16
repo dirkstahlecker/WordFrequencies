@@ -5,15 +5,17 @@ import re
 #operation to work
 class WordClass:
     rawWord = None
+    displayName = None
     firstName = None
     lastName = None
 
     def __init__(self, inp_word):
         self.rawWord = inp_word
-        markupName = re.compile('^\[!!([^|]+)\|([^!]+)!!\]$').search(self.rawWord)
+        markupName = re.compile('^\[!!([^|]+)\|([^_]+)_([^!]+)!!\]$').search(self.rawWord)
         if markupName != None:
-            self.firstName = markupName.group(1)
-            self.lastName = markupName.group(2)
+            self.displayName = markupName.group(1)
+            self.firstName = markupName.group(2)
+            self.lastName = markupName.group(3)
 
     def __str__(self):
         if self.firstName != None:

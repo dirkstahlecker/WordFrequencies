@@ -79,6 +79,7 @@ class WordFrequencies:
     MARK_UNDER_START = '[!!'
     MARK_UNDER_END = '!!]'
     MARK_UNDER_DELIMITER = '|'
+    MARK_UNDER_FIRSTLAST_DELIMITER = '_'
 
 
 ###############################################################################################
@@ -137,25 +138,23 @@ class WordFrequencies:
     def addLine(self, line, currentDate):
         markunderFile = open(self.markUnderFilePath, 'a')
 
-        exp = re.compile("\[!![^!]+!!\]|\s")
-        words = exp.split(line)
+        # exp = re.compile("\[!![^!]+!!\]|\s")
+        # words = exp.split(line)
+        words = line.split(' ')
 
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
         namesFound = set()
         for word in words:
-            if word == '' or word == None:
+            if word == '' or word == None or re.compile('^\s+$').search(word) != None:
                 continue
 
-            word = WordClass(word)
+            #clean word before putting it into the WordClass representation
+            word = word.rstrip('\r\n').strip().lstrip()
+            word = word.replace('\\', '')
+            word = re.sub('[\s\n\.,;:\}]+$', '', word)
 
-
-
-
-            if not re.compile('[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]').search(word.toString()): #doesn't contain a letter, so assume puntuation
-                continue
-            #TODO: this doesn't catch anything other than a single punctuation mark at the end
-            if re.compile('[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]$').search(word.toString()): #TODO: this isn't working
-                word = WordClass(word.toString()[:-1])
+            word = WordClass(word) #words are represented by the WordClass, which is basically an encapsulation of normal words and markup names in one object
+            print(word)
 
             if self.prefs.COMBINE_PLURALS:
                 if word.endswith("'s"):
@@ -207,19 +206,11 @@ class WordFrequencies:
 
             #words
             if self.wordDict.exists(word):
-                # self.wordsDict[word] = {'count': self.wordsDict[word]['count'] + 1, 
-                # 'lastDate': currentDate, 'firstDate': self.wordsDict[word]['firstDate'], 'wasUpper': wasUpper}
                 self.wordDict.addOrReplaceWord(word, self.wordDict.getCount(word) + 1, currentDate, self.wordDict.getFirstOccurrence(word), wasUpper)
             else:
                 self.wordDict.addWord(word, 1, currentDate, currentDate, wasUpper) #TODO: wasUpper wasn't there originally
             
             #words per day
-            # try:
-            #     if self.wordsPerDayDict.getLastOccurrence(word) != currentDate:
-            #         self.wordsPerDayDict[word] = {'count': self.wordsPerDayDict[word]['count'] + 1, 'lastOccurence': currentDate}
-            # except:
-            #         self.wordsPerDayDict[word] = {'count': 1, 'lastOccurence': currentDate}
-
             if self.wordsPerDayDict.exists(word):
                 self.wordsPerDayDict.addWord(word, self.wordsPerDayDict.getCount(word), currentDate) #TODO: was addOrReplaceWord, need to think what it should be
             else:
@@ -259,7 +250,7 @@ class WordFrequencies:
                 return
             if self.prefs.VERBOSE:
                 print('nameForRelated: ' + nameForRelated)
-        
+
         start_num = 0
         end_num = 0
         index1 = 0
