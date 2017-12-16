@@ -72,10 +72,10 @@ class PrintHelper:
         print(' ' * (self.NUM_COL_WIDTH - len(str(count))))
 
     #inp comes in as a tuple due to the sorting and the fact that dicts can't be sorted
-    def makeOutputPrettyWPD(self, inp): #( word : { 'count': count, 'lastOccurence': last occurence } )
+    def makeOutputPrettyWPD(self, inp): #( word : { 'count': count, 'lastOccurence': last occurence, 'firstOccurence': first occurence, 'wasUpper': was upper } )
         word = inp[0]
         count = inp[1]['count']
-        date = inp[1]['lastOccurence']
+        date = inp[1]['lastOccurrence']
         self.makeOutputPrettyHelper(word, count, date)
 
     def makeOutputPrettyWordsDict(self, inp): #( word : { 'count': count, 'lastDate': last occurence, 'firstDate': first occurence } )

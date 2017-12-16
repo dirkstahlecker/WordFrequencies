@@ -146,25 +146,25 @@ class WordFrequencies:
             if word == '' or word == None:
                 continue
 
-            # word = WordClass(word)
+            word = WordClass(word)
 
 
 
 
-            if not re.compile('[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]').search(word): #doesn't contain a letter, so assume puntuation
+            if not re.compile('[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]').search(word.toString()): #doesn't contain a letter, so assume puntuation
                 continue
             #TODO: this doesn't catch anything other than a single punctuation mark at the end
-            if re.compile('[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]$').search(word): #TODO: this isn't working
-                word = word[:-1]
+            if re.compile('[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]$').search(word.toString()): #TODO: this isn't working
+                word = WordClass(word.toString()[:-1])
 
             if self.prefs.COMBINE_PLURALS:
                 if word.endswith("'s"):
-                    word = word[:len(word)-2]
+                    word = WordClass(word.toString()[:len(word)-2])
                 #stripping plural s is easy for names, as we assume there isn't another word that is the name plus the trailing s
                 #but for arbitrary words its hard (e.g. "was" or "is")
 
             wasUpper = False;
-            if word[:1].isupper():
+            if word.toString()[:1].isupper():
                 wasUpper = True;
             originalWord = word
             word = Helper.cleanWord(word) #this strips off all punctuation and other information that we want to pass into markup.
@@ -259,7 +259,7 @@ class WordFrequencies:
                 return
             if self.prefs.VERBOSE:
                 print('nameForRelated: ' + nameForRelated)
-
+        
         start_num = 0
         end_num = 0
         index1 = 0

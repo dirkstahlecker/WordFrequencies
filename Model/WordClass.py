@@ -35,3 +35,6 @@ class WordClass:
 
     def strip(self):
         return self.toString().strip()
+
+    def endswith(self, arg):
+        return self.toString().endswith(arg)

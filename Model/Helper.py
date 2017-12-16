@@ -12,6 +12,10 @@ class Helper:
 
     @staticmethod
     def cleanWord(word, preserveCapitalization = False):
+        try:
+            word = word.toString()
+        except:
+            pass
         word = word.strip().lstrip();
         if not preserveCapitalization:
             word = word.lower()

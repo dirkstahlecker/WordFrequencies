@@ -113,6 +113,13 @@ class TestUM(unittest.TestCase):
             'dirk                3     ', 'laura               2     '])
         self.assertEqual(str(output), expected)
 
+    def test_wordsPerDay(self):
+        with Capturing() as output:
+            self.wf.printHighest(['3'], PrintOption.WORDSPERDAY)
+        expected = str(['Word                Count Last Occurence', '----------------------------------', 
+            'day                 9     02-05-2017', 'sentence            8     02-05-2017', 'one                 6     02-05-2017'])
+        self.assertEqual(expected, str(output))
+
     def test_overall(self):
         with Capturing() as output:
             self.wf.overallAnalytics()
