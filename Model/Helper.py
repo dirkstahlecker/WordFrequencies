@@ -69,3 +69,13 @@ class Helper:
     def cleanInput(inp):
         return inp.strip().lstrip().lower()
 
+    @staticmethod
+    def cleanWordForInitialAdd(word_in):
+        #clean word before putting it into the WordClass representation
+        word = word_in.rstrip('\r\n').strip().lstrip().replace('\\', '')
+        word = re.sub('[\s\n\.,;:\}]+$', '', word)
+        return word
+
+
+
+

@@ -72,61 +72,13 @@ class WordFrequencies:
     mostRecentDate = datetime.datetime(datetime.MINYEAR,1,1)
 
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
-    markUnderFilePath = os.path.dirname(os.path.realpath(__file__)) + '/markunder.txt'
     prefs = Preferences() #stored the user's preferences for various things
     printer = PrintHelper(prefs)
-
-    MARK_UNDER_START = '[!!'
-    MARK_UNDER_END = '!!]'
-    MARK_UNDER_DELIMITER = '|'
-    MARK_UNDER_FIRSTLAST_DELIMITER = '_'
 
 
 ###############################################################################################
 # Loading and Setup
 ###############################################################################################    
-
-    #only called for names
-    #ask which name it is, store it in a markup format, and compute a hash of the day
-
-    #return either the word unchanged, or the qualified name if it's a name
-    def getMarkUnderWord(self, word, originalWord, line, date):
-        print('\n\n\n')
-        print((Helper.prettyPrintDate(date)))
-        print(line) #gives context so you can figure out what's going on
-        print('Which ' + word + ' is this?') #TODO: want this name to be capitalized
-        numPossibleLastNames = 0
-
-        try:
-            self.lastNamesForFirstNameDict[word] #trigger exception if there's one to be thrown
-            for nameFromDict in self.lastNamesForFirstNameDict[word]:
-                print(str(numPossibleLastNames) + ': ' + nameFromDict)
-                numPossibleLastNames = numPossibleLastNames + 1
-            print('Or type new last name')
-        except:
-            print('Type last name:')
-
-        #get the last name either from the number of the choice (if it's a number) or the last name that was directly entered
-        lastName = ''
-        choice = input('>')
-        lastName = choice
-        for x in range(0, numPossibleLastNames):
-            if choice == str(x):
-                lastName = self.lastNamesForFirstNameDict[word][x]
-                break
-
-        try:
-            if lastName not in self.lastNamesForFirstNameDict[word]:
-                self.lastNamesForFirstNameDict[word].append(lastName)
-        except:
-            self.lastNamesForFirstNameDict[word] = [lastName]
-
-        #create the qualified name to insert into the markunder
-        qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER + Helper.cleanWord(originalWord, True) + ' ' + lastName + self.MARK_UNDER_END
-
-        return qualifiedLastName
-
-        #need to actually do something to associate the info the user entered with the specific instance of the name
 
 
 ###############################################################################################
@@ -138,8 +90,6 @@ class WordFrequencies:
     def addLine(self, line, currentDate):
         markunderFile = open(self.markUnderFilePath, 'a')
 
-        # exp = re.compile("\[!![^!]+!!\]|\s")
-        # words = exp.split(line)
         words = line.split(' ')
 
         wordsToCount = 0 #used to calculate the length of entries - don't want to include invalid words in the word count TODO: rethink this?
@@ -148,13 +98,9 @@ class WordFrequencies:
             if word == '' or word == None or re.compile('^\s+$').search(word) != None:
                 continue
 
-            #clean word before putting it into the WordClass representation
-            word = word.rstrip('\r\n').strip().lstrip()
-            word = word.replace('\\', '')
-            word = re.sub('[\s\n\.,;:\}]+$', '', word)
+            word = Helper.cleanWordForInitialAdd(word)
 
             word = WordClass(word) #words are represented by the WordClass, which is basically an encapsulation of normal words and markup names in one object
-            print(word)
 
             if self.prefs.COMBINE_PLURALS:
                 if word.endswith("'s"):
@@ -216,14 +162,15 @@ class WordFrequencies:
             else:
                 self.wordsPerDayDict(word, 1, currentDate)
 
-            if self.prefs.DO_MARK_UNDER:
-                #if it's a name, qualify it for the markunder
-                if word in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
-                    markUnderWord = self.getMarkUnderWord(word, originalWord, line, currentDate)
-                else:
-                    markUnderWord = word
+            #TODO: this is being moved to its own class to be called separately
+            # if self.prefs.DO_MARK_UNDER:
+            #     #if it's a name, qualify it for the markunder
+            #     if word in self.namesSet:# or not (Preferences.REQUIRE_CAPS_FOR_NAMES and wasUpper):
+            #         markUnderWord = self.getMarkUnderWord(word, originalWord, line, currentDate)
+            #     else:
+            #         markUnderWord = word
 
-                markunderFile.write(markUnderWord + ' ')
+            #     markunderFile.write(markUnderWord + ' ')
 
         markunderFile.close()
         return (wordsToCount, namesFound)
@@ -649,12 +596,119 @@ class WordFrequencies:
             print('Unknown command.')
         return True
 
+
+###############################################################################################
+# Markup
+###############################################################################################
+
+#this is used for going through a pre-existing file, checking it for names, and converting them to markup.
+#Existing markup is ignored, everything is preserved except for changing names into markup. Everything is
+#written back to different output file
+class Markup():
+    MARK_UNDER_START = '[!!'
+    MARK_UNDER_END = '!!]'
+    MARK_UNDER_DELIMITER = '|'
+    MARK_UNDER_FIRSTLAST_DELIMITER = '_'
+
+    lastNamesForFirstNameDict = {} #{ first name : [ last names ] }
+    namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
+    namesSet = set()
+
+    markUpFilePath = os.path.dirname(os.path.realpath(__file__)) + '/markup.txt'
+
+    def main(self, args):
+        self.namesList = self.makeNamesSet()
+        self.readFile(args.file)
+
+    #populate namesList from file
+    def makeNamesSet(self):
+        try:
+            f = open(self.namesURL, 'r') #TODO: error handling
+        except:
+            raise Exception("Names file not found")
+        self.namesSet.clear()
+        line = f.readline()
+        while line != '':
+            self.namesSet.add(line.strip().lower()) #TODO: does this do anything? What?
+            line = f.readline()
+        f.close()
+
+    def readFile(self, url):
+        try:
+            f = open(url, 'r')
+        except:
+            print('File not found')
+            newPath = input('Enter new path > ');
+            return self.readFile(newPath) #TODO: this doesn't work for entirely unknown reasons
+
+        markupFile = open(self.markUpFilePath, 'a')
+        allWords = []
+        line = f.readline()
+        while line != '':
+            words = line.split(' ')
+            for word in words:
+                word = Helper.cleanWordForInitialAdd(word)
+                word = WordClass(word)
+                if word in self.namesSet:
+                    word = self.getMarkUnderWord(word, '@', line)
+                allWords.append(word)
+                markupFile.write(str(word))
+
+            line = f.readline()
+
+        markupFile.close()
+
+
+    #only called for names
+    #ask which name it is, store it in a markup format, and compute a hash of the day
+
+    #return either the word unchanged, or the qualified name if it's a name
+    def getMarkUnderWord(self, word, originalWord, line):
+        print('\n\n\n')
+        print(line) #gives context so you can figure out what's going on
+        print('Which ' + word + ' is this?') #TODO: want this name to be capitalized
+        numPossibleLastNames = 0
+
+        try:
+            self.lastNamesForFirstNameDict[word] #trigger exception if there's one to be thrown
+            for nameFromDict in self.lastNamesForFirstNameDict[word]:
+                print(str(numPossibleLastNames) + ': ' + nameFromDict)
+                numPossibleLastNames = numPossibleLastNames + 1
+            print('Or type new last name')
+        except:
+            print('Type last name:')
+
+        #get the last name either from the number of the choice (if it's a number) or the last name that was directly entered
+        lastName = ''
+        choice = input('>')
+        lastName = choice
+        for x in range(0, numPossibleLastNames):
+            if choice == str(x):
+                lastName = self.lastNamesForFirstNameDict[word][x]
+                break
+
+        try:
+            if lastName not in self.lastNamesForFirstNameDict[word]:
+                self.lastNamesForFirstNameDict[word].append(lastName)
+        except:
+            self.lastNamesForFirstNameDict[word] = [lastName]
+
+        #create the qualified name to insert into the markunder
+        qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER;
+        qualifiedLastName = qualifiedLastName + Helper.cleanWord(originalWord, True) + self.MARK_UNDER_FIRSTLAST_DELIMITER + lastName + self.MARK_UNDER_END
+
+        return qualifiedLastName
+        #need to actually do something to associate the info the user entered with the specific instance of the name
+
+
+
 ###############################################################################################
 # Main 
 ###############################################################################################
 #Options need to be set on startup
 if __name__ == '__main__':
     wf = WordFrequencies()
+    mu = Markup()
 
     #TODO: integrate this into the word frequencies class itself
     parser = argparse.ArgumentParser()
@@ -666,8 +720,10 @@ if __name__ == '__main__':
     parser.add_argument('-nm', '--noMarkunder', action='store_false', help='Disable markunder')
     args = parser.parse_args()
 
-    wf.main(args)
-
+    if args.markunder:
+        mu.main(args)
+    else:
+        wf.main(args)
 
 
 '''

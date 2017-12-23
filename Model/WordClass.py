@@ -30,6 +30,12 @@ class WordClass:
         else:
             return self.rawWord == other
 
+    def __hash__(self):
+        return hash(repr(self))
+
+    def __eq__(self, other):
+        return self.rawWord == other.rawWord and self.firstName == other.firstName and self.lastName == other.lastName
+
     def toString(self):
         if self.firstName != None:
             return self.firstName
