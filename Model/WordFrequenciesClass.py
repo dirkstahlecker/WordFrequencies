@@ -603,13 +603,8 @@ class WordFrequencies:
 
 #this is used for going through a pre-existing file, checking it for names, and converting them to markup.
 #Existing markup is ignored, everything is preserved except for changing names into markup. Everything is
-#written back to different output file
+#written back to a different output file
 class Markup():
-    MARK_UNDER_START = '[!!'
-    MARK_UNDER_END = '!!]'
-    MARK_UNDER_DELIMITER = '|'
-    MARK_UNDER_FIRSTLAST_DELIMITER = '_'
-
     lastNamesForFirstNameDict = {} #{ first name : [ last names ] }
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     namesSet = set()
@@ -652,7 +647,8 @@ class Markup():
                 if word in self.namesSet:
                     word = self.getMarkUnderWord(word, '@', line)
                 allWords.append(word)
-                markupFile.write(str(word))
+                # markupFile.write(str(word))
+                markupFile.write(word.printMarkup())
 
             line = f.readline()
 
@@ -694,7 +690,7 @@ class Markup():
             self.lastNamesForFirstNameDict[word] = [lastName]
 
         #create the qualified name to insert into the markunder
-        qualifiedLastName = self.MARK_UNDER_START + word + self.MARK_UNDER_DELIMITER;
+        qualifiedLastName = WordClass.MARK_UNDER_START + word + WordClass.MARK_UNDER_DELIMITER;
         qualifiedLastName = qualifiedLastName + Helper.cleanWord(originalWord, True) + self.MARK_UNDER_FIRSTLAST_DELIMITER + lastName + self.MARK_UNDER_END
 
         return qualifiedLastName

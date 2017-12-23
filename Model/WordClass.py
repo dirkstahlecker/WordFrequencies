@@ -9,6 +9,11 @@ class WordClass:
     firstName = None
     lastName = None
 
+    MARK_UNDER_START = '[!!'
+    MARK_UNDER_END = '!!]'
+    MARK_UNDER_DELIMITER = '|'
+    MARK_UNDER_FIRSTLAST_DELIMITER = '_'
+
     def __init__(self, inp_word):
         self.rawWord = inp_word
         markupName = re.compile('^\[!!([^|]+)\|([^_]+)_([^!]+)!!\]$').search(self.rawWord)
@@ -18,10 +23,7 @@ class WordClass:
             self.lastName = markupName.group(3)
 
     def __str__(self):
-        if self.firstName != None:
-            return self.firstName
-        else:
-            return self.rawWord
+        return self.toString()
 
     #TODO: make this case insensitive?
     def __eq__(self, other):
@@ -46,3 +48,10 @@ class WordClass:
 
     def endswith(self, arg):
         return self.toString().endswith(arg)
+
+    def printMarkup(self):
+        if self.firstName == None:
+            return self.toString()
+        return self.MARK_UNDER_START + self.displayName + self.MARK_UNDER_DELIMITER + self.firstName + self.MARK_UNDER_FIRSTLAST_DELIMITER + self.lastName + self.MARK_UNDER_END
+
+
