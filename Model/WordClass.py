@@ -14,8 +14,21 @@ class WordClass:
     MARK_UNDER_DELIMITER = '|'
     MARK_UNDER_FIRSTLAST_DELIMITER = '_'
 
-    def __init__(self, inp_word):
-        self.rawWord = inp_word
+    @staticmethod
+    def addWordOrMarkup(inp_wordOrMarkup):
+        return WordClass(inp_wordOrMarkup)
+
+    def addNameWithMarkupPieces(displayName, firstName, lastName):
+        return WordClass(WordClass.buildMarkupString(displayName, firstName, lastName))
+
+    @staticmethod
+    def buildMarkupString(displayName, firstName, lastName):
+        markupStr = WordClass.MARK_UNDER_START + displayName + WordClass.MARK_UNDER_DELIMITER + firstName
+        markupStr += WordClass.MARK_UNDER_FIRSTLAST_DELIMITER + lastName + WordClass.MARK_UNDER_END
+        return markupStr;
+
+    def __init__(self, inp_markup):
+        self.rawWord = inp_markup
         markupName = re.compile('^\[!!([^|]+)\|([^_]+)_([^!]+)!!\]$').search(self.rawWord)
         if markupName != None:
             self.displayName = markupName.group(1)
@@ -39,8 +52,8 @@ class WordClass:
         return self.rawWord == other.rawWord and self.firstName == other.firstName and self.lastName == other.lastName
 
     def toString(self):
-        if self.firstName != None:
-            return self.firstName
+        if self.displayName != None:
+            return self.displayName
         return self.rawWord
 
     def strip(self):
@@ -50,8 +63,8 @@ class WordClass:
         return self.toString().endswith(arg)
 
     def printMarkup(self):
-        if self.firstName == None:
+        if self.displayName == None:
             return self.toString()
-        return self.MARK_UNDER_START + self.displayName + self.MARK_UNDER_DELIMITER + self.firstName + self.MARK_UNDER_FIRSTLAST_DELIMITER + self.lastName + self.MARK_UNDER_END
+        return WordClass.buildMarkupString(self.displayName, self.firstName, self.lastName)
 
 

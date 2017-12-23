@@ -104,7 +104,7 @@ class WordFrequencies:
 
             if self.prefs.COMBINE_PLURALS:
                 if word.endswith("'s"):
-                    word = WordClass(word.toString()[:len(word)-2])
+                    word = WordClass.addWordOrMarkup(word.toString()[:len(word)-2])
                 #stripping plural s is easy for names, as we assume there isn't another word that is the name plus the trailing s
                 #but for arbitrary words its hard (e.g. "was" or "is")
 
@@ -612,7 +612,7 @@ class Markup():
     markUpFilePath = os.path.dirname(os.path.realpath(__file__)) + '/markup.txt'
 
     def main(self, args):
-        self.namesList = self.makeNamesSet()
+        self.makeNamesSet()
         self.readFile(args.file)
 
     #populate namesList from file
@@ -637,18 +637,19 @@ class Markup():
             return self.readFile(newPath) #TODO: this doesn't work for entirely unknown reasons
 
         markupFile = open(self.markUpFilePath, 'a')
+        markupFile.write('\n\n\n\n')
         allWords = []
         line = f.readline()
         while line != '':
             words = line.split(' ')
-            for word in words:
-                word = Helper.cleanWordForInitialAdd(word)
-                word = WordClass(word)
-                if word in self.namesSet:
-                    word = self.getMarkUnderWord(word, '@', line)
-                allWords.append(word)
-                # markupFile.write(str(word))
-                markupFile.write(word.printMarkup())
+            for word_str in words:
+                word_str = Helper.cleanWordForInitialAdd(word_str)
+                if Helper.cleanWord(word_str) in self.namesSet:
+                    word_class = self.getMarkUnderWord(word_str, line)
+                else:
+                    word_class = WordClass.addWordOrMarkup(word_str)
+                allWords.append(word_class)
+                markupFile.write(word_class.printMarkup())
 
             line = f.readline()
 
@@ -659,7 +660,9 @@ class Markup():
     #ask which name it is, store it in a markup format, and compute a hash of the day
 
     #return either the word unchanged, or the qualified name if it's a name
-    def getMarkUnderWord(self, word, originalWord, line):
+    def getMarkUnderWord(self, word, line):
+        assert type(word) is str
+
         print('\n\n\n')
         print(line) #gives context so you can figure out what's going on
         print('Which ' + word + ' is this?') #TODO: want this name to be capitalized
@@ -689,11 +692,13 @@ class Markup():
         except:
             self.lastNamesForFirstNameDict[word] = [lastName]
 
-        #create the qualified name to insert into the markunder
-        qualifiedLastName = WordClass.MARK_UNDER_START + word + WordClass.MARK_UNDER_DELIMITER;
-        qualifiedLastName = qualifiedLastName + Helper.cleanWord(originalWord, True) + self.MARK_UNDER_FIRSTLAST_DELIMITER + lastName + self.MARK_UNDER_END
+        return WordClass.addNameWithMarkupPieces(word, word, lastName)
 
-        return qualifiedLastName
+        # #create the qualified name to insert into the markunder
+        # qualifiedLastName = WordClass.MARK_UNDER_START + word + WordClass.MARK_UNDER_DELIMITER;
+        # qualifiedLastName = qualifiedLastName + Helper.cleanWord(originalWord, True) + self.MARK_UNDER_FIRSTLAST_DELIMITER + lastName + self.MARK_UNDER_END
+
+        # return qualifiedLastName
         #need to actually do something to associate the info the user entered with the specific instance of the name
 
 
