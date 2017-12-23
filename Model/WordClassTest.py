@@ -10,9 +10,9 @@ import re
 
 class TestUM(unittest.TestCase):
     basicWord = "test"
-    markupName = "[!!Dirk|Dirk Stahlecker!!]"
-    wcBasic = WordClass(basicWord)
-    wcMarkup = WordClass(markupName)
+    markupName = "[!!Dirk|Dirk_Stahlecker!!]"
+    wcBasic = WordClass.addWordOrMarkup(basicWord)
+    wcMarkup = WordClass.addWordOrMarkup(markupName)
 
     @classmethod
     def setUpClass(self):
@@ -24,13 +24,13 @@ class TestUM(unittest.TestCase):
 
     def test_basicWord(self):
         self.assertEqual(self.basicWord, self.wcBasic.rawWord)
-        self.assertTrue(self.wcBasic == self.basicWord)
-        self.assertFalse(self.wcBasic == self.wcMarkup)
+        self.assertTrue(self.wcBasic.toString() == self.basicWord)
+        self.assertFalse(self.wcBasic.toString() == self.wcMarkup)
 
     def test_markupWord(self):
         self.assertEqual(self.markupName, self.wcMarkup.rawWord)
-        self.assertTrue("Dirk" == self.wcMarkup)
-        self.assertFalse(self.wcMarkup == self.basicWord)
+        self.assertTrue("Dirk" == self.wcMarkup.toString())
+        self.assertFalse(self.wcMarkup.toString() == self.basicWord)
 
 
 if __name__ == '__main__':

@@ -88,7 +88,7 @@ class WordFrequencies:
     #print the line to markunder file, with the proper qualification on names
     #all markunder printing should happen here
     def addLine(self, line, currentDate):
-        markunderFile = open(self.markUnderFilePath, 'a')
+        # markunderFile = open(self.markUnderFilePath, 'a')
 
         words = line.split(' ')
 
@@ -172,7 +172,7 @@ class WordFrequencies:
 
             #     markunderFile.write(markUnderWord + ' ')
 
-        markunderFile.close()
+        # markunderFile.close()
         return (wordsToCount, namesFound)
 
 

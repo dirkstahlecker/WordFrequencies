@@ -38,17 +38,12 @@ class WordClass:
     def __str__(self):
         return self.toString()
 
-    #TODO: make this case insensitive?
-    def __eq__(self, other):
-        if self.firstName != None:
-            return self.firstName == other #TODO: look at this again
-        else:
-            return self.rawWord == other
-
     def __hash__(self):
         return hash(repr(self))
 
     def __eq__(self, other):
+        if type(other) is not WordClass:
+            return False
         return self.rawWord == other.rawWord and self.firstName == other.firstName and self.lastName == other.lastName
 
     def toString(self):
