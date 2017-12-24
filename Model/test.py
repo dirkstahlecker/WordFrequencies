@@ -128,6 +128,11 @@ class TestUM(unittest.TestCase):
             'Total number of words written:  51'])
         self.assertEqual(str(output), expected)
 
+    def test_guessNames(self):
+        output = self.wf.guessNames('Test line Name1 Name2 something else Dirk Cheryl Name3.', True)
+        expected = "['Name1', 'Name2', 'Name3']"
+        self.assertEqual(str(sorted(output)), expected)
+
 
 
     ##############################################################

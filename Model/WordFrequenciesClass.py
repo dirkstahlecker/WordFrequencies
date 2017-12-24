@@ -1,5 +1,6 @@
 import argparse
 import re
+import regex
 import os
 import operator
 import argparse
@@ -67,7 +68,6 @@ class WordFrequencies:
     totalNumberOfWords = 0
     dayEntryHashTable = {} #{ date : hash }
 
-    guessedNamesSet = set()
     firstDate = datetime.datetime(datetime.MAXYEAR,12,31)
     mostRecentDate = datetime.datetime(datetime.MINYEAR,1,1)
 
@@ -396,11 +396,10 @@ class WordFrequencies:
         f.close()
 
     #try to guess what is a name by looking for capitalized letters in the middle of sentences
-    def getGuessedNames(self):
+    def getGuessedNames(self, guessedNamesSet):
         newNames = set()
         print('Are these names? (y/n)')
-        print(self.guessedNamesSet)
-        for name in self.guessedNamesSet:
+        for name in guessedNamesSet:
             if name in self.namesSet:
                 break
             inp = input(name + ': ')
@@ -412,17 +411,21 @@ class WordFrequencies:
             f.write(name + '\n')
         f.close()
 
-    def guessNames(self, line):
-        nameRegex = re.compile('[^\.]\s+([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w]+)\W')
-        names = nameRegex.search(line)
+    def guessNames(self, line, testFlag = False):
+        guessedNamesSet = set()
+        names = regex.findall('[^\.]\s+([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w]+)\W', line, overlapped=True)
 
         try: 
-            for name in names.groups():
-                print(name)
+            for name in names:
                 if name.lower() not in self.namesSet:
-                    self.guessedNamesSet.add(name)
+                    guessedNamesSet.add(name)
         except:
             return
+
+        #want to return the guessedNamesSet here if this is running for a test
+        if testFlag:
+            return guessedNamesSet
+        self.getGuessedNames(guessedNamesSet)
 
     #Add a name manually to the names set
     def addName(self, args):
@@ -656,6 +659,7 @@ class Markup():
 
         markupFile.close()
 
+    #TODO: breaks on 'name1/name2' - need to split apart somehow
 
     #only called for names
     #ask which name it is, store it in a markup format, and compute a hash of the day
@@ -665,14 +669,9 @@ class Markup():
         assert type(displayName) is str
 
         print('\n\n\n')
-        print(line) #gives context so you can figure out what's going on
+        print(line) #gives context so you can figure out what's going on #TODO: print the sentence and not the entire paragraph
         print(displayName + ':')
-        # print('Which ' + word_in + ' is this?')
         numPossibleLastNames = 0
-
-        #TODO: this needs to allow you to specify first and last name (to allow different display names to be the same person)
-
-        #TODO: what to do if it picks up a name that isn't a name? ('will', specifically)
 
         firstName = ''
         print('Is this the proper first name for ' + displayName + '? [n] for no (defaults to yes)')
@@ -680,7 +679,7 @@ class Markup():
         if properFirstName == 'n':
             print('Enter proper first name, or enter "None" if this is not a name: ')
             possibleFirstName = input('>')
-            if possibleFirstName == 'None': #not actually a name
+            if possibleFirstName == 'None' or possibleFirstName == 'none': #not actually a name
                 return WordClass.addWordOrMarkup(displayName)
             firstName = possibleFirstName
         else:
