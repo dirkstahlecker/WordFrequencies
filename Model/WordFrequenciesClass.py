@@ -660,17 +660,30 @@ class Markup():
     #ask which name it is, store it in a markup format, and compute a hash of the day
     #return either the word unchanged, or the markup name if it's a name
     #returns WordClass object
-    def getMarkUnderWord(self, word, line):
-        assert type(word) is str
+    def getMarkUnderWord(self, displayName, line):
+        assert type(displayName) is str
 
         print('\n\n\n')
         print(line) #gives context so you can figure out what's going on
-        print('Which ' + word + ' is this?') #TODO: want this name to be capitalized
+        print(displayName + ':')
+        # print('Which ' + word_in + ' is this?')
         numPossibleLastNames = 0
 
+        #TODO: this needs to allow you to specify first and last name (to allow different display names to be the same person)
+
+        firstName = ''
+        print('Is this the proper first name for ' + displayName + '? [n] for no (defaults to yes)')
+        properFirstName = input('>')
+        print(properFirstName)
+        if properFirstName == 'n':
+            print('Enter proper first name: ')
+            firstName = input('>')
+        else:
+            firstName = displayName
+
         try:
-            self.lastNamesForFirstNameDict[word] #trigger exception if there's one to be thrown
-            for nameFromDict in self.lastNamesForFirstNameDict[word]:
+            self.lastNamesForFirstNameDict[firstName] #trigger exception if there's one to be thrown
+            for nameFromDict in self.lastNamesForFirstNameDict[firstName]:
                 print(str(numPossibleLastNames) + ': ' + nameFromDict)
                 numPossibleLastNames = numPossibleLastNames + 1
             print('Or type new last name')
@@ -683,16 +696,16 @@ class Markup():
         lastName = choice
         for x in range(0, numPossibleLastNames):
             if choice == str(x):
-                lastName = self.lastNamesForFirstNameDict[word][x]
+                lastName = self.lastNamesForFirstNameDict[firstName][x]
                 break
 
         try:
-            if lastName not in self.lastNamesForFirstNameDict[word]:
-                self.lastNamesForFirstNameDict[word].append(lastName)
+            if lastName not in self.lastNamesForFirstNameDict[firstName]:
+                self.lastNamesForFirstNameDict[firstName].append(lastName)
         except:
-            self.lastNamesForFirstNameDict[word] = [lastName]
+            self.lastNamesForFirstNameDict[firstName] = [lastName]
 
-        return WordClass.addNameWithMarkupPieces(word, word, lastName)
+        return WordClass.addNameWithMarkupPieces(displayName, firstName, lastName)
 
 
 ###############################################################################################
