@@ -781,4 +781,8 @@ Prints to the markup.txt file successfully, with the correct markup, except for 
 Next up:
 Get punctuation, spacing, and newlines to print successfully into the output file
 
+12-23-17:
+Spacing and punctuation is preserved when writing to markup file
+    Still is a bit off with spacing (adds an additional space to the start of a new line, for example)
+
 '''

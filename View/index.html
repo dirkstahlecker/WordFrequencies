@@ -55,19 +55,16 @@
 
     var idList = {}
     function removeMarkup(txt) {
-        var myRegexp = /\[!!(([^\]!|]+)\|([^!]+))!!\]/g;
+        var myRegexp = /\[!!([^\]!|]+)\|([^!]+)_([^!]+)!!\]/g;
         //There will be bugs here if the text that replaces the previous text is longer, since the regex
         //restarts at the same index the next iteration but the index has changed, so it won't pick up I think
     
         var m;
         do {
             m = myRegexp.exec(txt);
-            console.log(m)
             if (m) {
-                console.log(m[0], '|', m[1], '|',m[2], '|',m[3]);
-                console.log('----------');
                 var id = hashCode(m[3]);
-                idList[id] = m[3];
+                idList[id] = m[2] + ' ' + m[3]; //this is the value that is put within the popup 
                 txt = txt.replace(m[0], '<span class="' + id + '">' + m[2] + '</span>');
             }
         } while (m);
@@ -128,7 +125,6 @@
 
 
 <!--
-Need to get punctuation and capitalization into the markup so it can be seen in the html. 
+Bugs:
 
-Second occurrences of a name don't work
 -->
