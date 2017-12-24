@@ -3,6 +3,9 @@ import re
 #Used to represent a single word. This is a full class so markup words can be handled the same way as
 #regular words without disrupting the logic. Overriding the toString and comparison methods allow this 
 #operation to work
+
+#display name is purely for display and can be different for the same person. First and last name are internal,
+#and are utilized for determining if two people are the same
 class WordClass:
     rawWord = None
     displayName = None
@@ -44,7 +47,7 @@ class WordClass:
     def __eq__(self, other):
         if type(other) is not WordClass:
             return False
-        return self.rawWord == other.rawWord and self.firstName == other.firstName and self.lastName == other.lastName
+        return self.firstName == other.firstName and self.lastName == other.lastName
 
     def toString(self):
         if self.displayName != None:

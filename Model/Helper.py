@@ -75,26 +75,14 @@ class Helper:
     @staticmethod
     def cleanWordForInitialAdd(word_in):
         if re.match('^\s+$', word_in) != None:
-            print('WHAT TO RETURN HERE??')
-            print(word_in)
+            print('WHAT TO RETURN HERE??') #TODO: error handling
             return ('', word_in, '')
-        print('word_in: ', end='')
-        print(word_in)
         #clean word before putting it into the WordClass representation
         firstLetterIndex = re.search('\w|-', word_in).span()[0]
-        print('firstLetterIndex: ', end='')
-        print(firstLetterIndex)
         beforeStuff = word_in[:firstLetterIndex]
-        print('beforeStuff: ', end='')
-        print(beforeStuff)
         lastLetterIndex = re.search('\w(?!.*\w)', word_in).span()[1]
         afterStuff = word_in[lastLetterIndex:]
-        print('afterStuff: ', end='')
-        print(afterStuff)
         word_str = word_in[firstLetterIndex:lastLetterIndex]
-        print('word_str: ', end='')
-        print(word_str)
-        print('\n\n')
 
 
 

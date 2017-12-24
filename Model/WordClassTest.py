@@ -32,6 +32,11 @@ class TestUM(unittest.TestCase):
         self.assertTrue("Dirk" == self.wcMarkup.toString())
         self.assertFalse(self.wcMarkup.toString() == self.basicWord)
 
+    def test_differentDisplayNamesForSamePerson(self):
+        wcDifferentDisplayName = WordClass.addWordOrMarkup('[!!Dirk_alternate|Dirk_Stahlecker!!]')
+        self.assertEqual("Dirk_alternate", wcDifferentDisplayName.toString())
+        self.assertEqual(wcDifferentDisplayName, self.wcMarkup)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -98,7 +98,7 @@ class WordFrequencies:
             if word == '' or word == None or re.compile('^\s+$').search(word) != None:
                 continue
 
-            word = Helper.cleanWordForInitialAdd(word)
+            (beforeStuff, word, afterStuff) = Helper.cleanWordForInitialAdd(word)
 
             word = WordClass(word) #words are represented by the WordClass, which is basically an encapsulation of normal words and markup names in one object
 
@@ -415,6 +415,7 @@ class WordFrequencies:
     def guessNames(self, line):
         nameRegex = re.compile('[^\.]\s+([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w]+)\W')
         names = nameRegex.search(line)
+        print(self.namesSet)
 
         try: 
             for name in names.groups():
@@ -761,6 +762,8 @@ noMarkUnder isn't utilized
 preserver capitalization and punctuation
 
 lookup - length from first to last is wrong
+
+when giving context, show just the sentence, not the entire paragraph
 
 
 Bugs:
