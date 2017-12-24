@@ -1,7 +1,8 @@
-1-01-17 day one sentence one [!!Cheryl|Cheryl_Gaul!!] [!!Laura|Laura_Standley!!] 
- 1-02-17 day two sentence one [!!Dirk|Dirk_Stahlecker!!] [!!Cheryl|Cheryl_Gaul!!] Day two sentence two 
- 1-03-17 day three sentence one [!!Dirk|Dirk_Stahlecker!!] [!!Cheryl|Cheryl_Gaul!!] 
- 1-05-17 day four sentence one [!!Dirk|Dirk_Stahlecker!!] [!!Cheryl|Cheryl_Gaul!!] [!!Laura|Laura_Standley!!] Day four sentence two skipping a day 
- 2-05-17 day five sentence one Day five sentence two skipping a month 
- 12-31-17 testing dates 
- 9-8-17 another date 
+1-01-17 day one sentence one [!!Cheryl|Cheryl_Gaul!!] [!!Laura|Laura_Standley!!]
+1-02-17 day two sentence one [!!Dirk|Dirk_Stahlecker!!] [!!Cheryl|Cheryl_Gaul!!] Day two sentence two 
+1-03-17 day three sentence one [!!Dirk|Dirk_Stahlecker!!] [!!Cheryl|Cheryl_Gaul!!] 
+1-05-17 day four sentence one [!!Dirk|Dirk_Stahlecker!!] [!!Cheryl|Cheryl_Gaul!!] [!!Laura|Laura_Standley!!] Day four sentence two skipping a day 
+2-05-17 day five sentence one Day five sentence two skipping a month 
+12-31-17 testing dates 
+9-8-17 another date 
+1-01-17 day one sentence one 
