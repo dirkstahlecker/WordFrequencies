@@ -395,8 +395,8 @@ class WordFrequencies:
             line = f.readline()
         f.close()
 
-    #try to guess what is a name by looking for capitalized letters in the middle of sentences
-    def getGuessedNames(self, guessedNamesSet):
+    #iterate over 
+    def guessNamesHelper(self, guessedNamesSet):
         newNames = set()
         print('Are these names? (y/n)')
         for name in guessedNamesSet:
@@ -411,6 +411,7 @@ class WordFrequencies:
             f.write(name + '\n')
         f.close()
 
+    #try to guess what is a name by looking for capitalized letters in the middle of sentences
     def guessNames(self, line, testFlag = False):
         guessedNamesSet = set()
         names = regex.findall('[^\.]\s+([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w]+)\W', line, overlapped=True)
@@ -422,10 +423,11 @@ class WordFrequencies:
         except:
             return
 
-        #want to return the guessedNamesSet here if this is running for a test
+        #want to return the guessedNamesSet here if this is running for a test 
+        #TODO: figure out how to send more input during a test and get rid of this hack
         if testFlag:
             return guessedNamesSet
-        self.getGuessedNames(guessedNamesSet)
+        self.guessNamesHelper(guessedNamesSet)
 
     #Add a name manually to the names set
     def addName(self, args):
@@ -476,8 +478,8 @@ class WordFrequencies:
         self.readFile(fileurl)
 
     def runMainLoop(self):
-        if self.prefs.GUESS_NAMES:
-            self.getGuessedNames()
+        # if self.prefs.GUESS_NAMES:
+        #     self.getGuessedNames()
         while True:
             print('''
     Options:
@@ -613,10 +615,24 @@ class Markup():
     namesURL = os.path.dirname(os.path.realpath(__file__)) + '/names.txt'
     namesSet = set()
     markUpFilePath = os.path.dirname(os.path.realpath(__file__)) + '/markup.txt'
+    uniqueDisplayNamesToNameDict = {} # { display name : ( first name , last name ) } if specified to automatically assign a last name to a given first name, hold it here
 
     def main(self, args):
         self.makeNamesSet()
+        self.lookForWarningsAndAlert(args.file)
         self.readFile(args.file)
+
+    #TODO: untested
+    #Looks through the entire document and shows a warning if there are things that could cause a problem
+    def lookForWarningsAndAlert(self, url):
+        f = open(url, 'r')
+        warnings = []
+        if regex.search('[\S]+/[\S]+', f.read()) != None: #slashes should be split upon as separate words but aren't
+            warnings.append('File contains words separated by a "/". Split the words apart with a space on either side of the "/"')
+
+        if len(warnings) > 0:
+            for warning in warnings:
+                print(warning, end='\n')
 
     #populate namesList from file
     def makeNamesSet(self):
@@ -673,35 +689,43 @@ class Markup():
         print(displayName + ':')
         numPossibleLastNames = 0
 
-        firstName = ''
-        print('Is this the proper first name for ' + displayName + '? [n] for no (defaults to yes)')
-        properFirstName = input('>')
-        if properFirstName == 'n':
-            print('Enter proper first name, or enter "None" if this is not a name: ')
-            possibleFirstName = input('>')
-            if possibleFirstName == 'None' or possibleFirstName == 'none': #not actually a name
-                return WordClass.addWordOrMarkup(displayName)
-            firstName = possibleFirstName
-        else:
-            firstName = displayName
+        if displayName in self.uniqueDisplayNamesToNameDict.keys(): #we've specified to give the same markup to all these display names
+            firstName = self.uniqueDisplayNamesToNameDict[displayName][0]
+            lastName = self.uniqueDisplayNamesToNameDict[displayName][1]
+        else: #proceed normally
+            firstName = ''
+            print('Is this the proper first name for ' + displayName + '? [enter] for yes, [n] for no')
+            properFirstName = input('>')
+            if properFirstName == 'n':
+                print('Enter proper first name, or enter "None" if this is not a name: ')
+                possibleFirstName = input('>')
+                if possibleFirstName == 'None' or possibleFirstName == 'none': #not actually a name
+                    return WordClass.addWordOrMarkup(displayName)
+                firstName = possibleFirstName
+            else:
+                firstName = displayName
 
-        try:
-            self.lastNamesForFirstNameDict[firstName] #trigger exception if there's one to be thrown
-            for nameFromDict in self.lastNamesForFirstNameDict[firstName]:
-                print(str(numPossibleLastNames) + ': ' + nameFromDict)
-                numPossibleLastNames = numPossibleLastNames + 1
-            print('Or type new last name')
-        except:
-            print('Type last name:')
+            try:
+                self.lastNamesForFirstNameDict[firstName] #trigger exception if there's one to be thrown
+                for nameFromDict in self.lastNamesForFirstNameDict[firstName]:
+                    print(str(numPossibleLastNames) + ': ' + nameFromDict)
+                    numPossibleLastNames = numPossibleLastNames + 1
+                print('Or type new last name (append "!" at end to auto assign all instance of this name to this last name):')
+            except:
+                print('Type last name (append "!" at end to auto assign all instance of this name to this last name):')
 
-        #get the last name either from the number of the choice (if it's a number) or the last name that was directly entered
-        lastName = ''
-        choice = input('>')
-        lastName = choice
-        for x in range(0, numPossibleLastNames):
-            if choice == str(x):
-                lastName = self.lastNamesForFirstNameDict[firstName][x]
+            #get the last name either from the number of the choice (if it's a number) or the last name that was directly entered
+            lastName = ''
+            choice = input('>')
+            lastName = choice
+            for x in range(0, numPossibleLastNames):
+                if choice == str(x):
+                    lastName = self.lastNamesForFirstNameDict[firstName][x]
                 break
+
+            if lastName[-1] == '!': #specify that all instance of this display name are assigned to this last name, without asking again
+                lastName = lastName[:-1]
+                self.uniqueDisplayNamesToNameDict[displayName] = (firstName, lastName)
 
         try:
             if lastName not in self.lastNamesForFirstNameDict[firstName]:
@@ -782,8 +806,6 @@ lookup - length from first to last is wrong
 
 when giving context, show just the sentence, not the entire paragraph
 
-guessNames has no tests
-
 
 Bugs:
 fix axes on graphing
@@ -806,5 +828,9 @@ Get punctuation, spacing, and newlines to print successfully into the output fil
 12-23-17:
 Spacing and punctuation is preserved when writing to markup file
     Still is a bit off with spacing (adds an additional space to the start of a new line, for example)
+Consolidated two guessNames methods into one
+Fixed bugs in guessName (couldn't pick up two names next to each other) and added test
+Allow for entering different first name than display name
+displayName in WordClass is only for display, and first and last name are the only things looked at for equality
 
 '''
