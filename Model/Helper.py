@@ -3,6 +3,8 @@ from datetime import datetime
 import locale
 
 class Helper:
+    illegalWordStartCharacters = ['\\','{','}'] #characters that a word can't start with
+
     @staticmethod
     def daysAsPrettyLength(numDays):
         years = numDays // 365
@@ -41,10 +43,9 @@ class Helper:
 
     @staticmethod
     def valid(word):
-        illegalCharacters = ['\\','{','}'] #characters that a word can't start with
         if len(word) == 0:
             return False;
-        if word[0] in illegalCharacters:
+        if word[0] in Helper.illegalWordStartCharacters:
             return False
         return True
 
@@ -69,12 +70,37 @@ class Helper:
     def cleanInput(inp):
         return inp.strip().lstrip().lower()
 
+    #return the stripped word, along with the stuff that was stripped off
+    #return (beforeStuff, strippedWOrd, afterStuff)
     @staticmethod
     def cleanWordForInitialAdd(word_in):
+        if re.match('^\s+$', word_in) != None:
+            print('WHAT TO RETURN HERE??')
+            print(word_in)
+            return ('', word_in, '')
+        print('word_in: ', end='')
+        print(word_in)
         #clean word before putting it into the WordClass representation
+        firstLetterIndex = re.search('\w|-', word_in).span()[0]
+        print('firstLetterIndex: ', end='')
+        print(firstLetterIndex)
+        beforeStuff = word_in[:firstLetterIndex]
+        print('beforeStuff: ', end='')
+        print(beforeStuff)
+        lastLetterIndex = re.search('\w(?!.*\w)', word_in).span()[1]
+        afterStuff = word_in[lastLetterIndex:]
+        print('afterStuff: ', end='')
+        print(afterStuff)
+        word_str = word_in[firstLetterIndex:lastLetterIndex]
+        print('word_str: ', end='')
+        print(word_str)
+        print('\n\n')
+
+
+
         word = word_in.rstrip('\r\n').strip().lstrip().replace('\\', '')
         word = re.sub('[\s\n\.,;:\}]+$', '', word)
-        return word
+        return (beforeStuff, word_str, afterStuff)
 
 
 
