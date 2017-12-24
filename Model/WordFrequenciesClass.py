@@ -415,10 +415,10 @@ class WordFrequencies:
     def guessNames(self, line):
         nameRegex = re.compile('[^\.]\s+([ABCDEFGHIJKLMNOPQRSTUVWXYZ][\w]+)\W')
         names = nameRegex.search(line)
-        print(self.namesSet)
 
         try: 
             for name in names.groups():
+                print(name)
                 if name.lower() not in self.namesSet:
                     self.guessedNamesSet.add(name)
         except:
@@ -649,7 +649,8 @@ class Markup():
                 else:
                     word_class = WordClass.addWordOrMarkup(word_str)
                 allWords.append(word_class)
-                markupFile.write(word_class.printMarkup() + ' ')
+                markupFile.write(word_beforeStuff + word_class.printMarkup() + word_afterStuff + ' ') #need to manually add a space since they're removed in the split
+                #TODO: add spaces back only where they were taken from
 
             line = f.readline()
 
@@ -671,13 +672,17 @@ class Markup():
 
         #TODO: this needs to allow you to specify first and last name (to allow different display names to be the same person)
 
+        #TODO: what to do if it picks up a name that isn't a name? ('will', specifically)
+
         firstName = ''
         print('Is this the proper first name for ' + displayName + '? [n] for no (defaults to yes)')
         properFirstName = input('>')
-        print(properFirstName)
         if properFirstName == 'n':
-            print('Enter proper first name: ')
-            firstName = input('>')
+            print('Enter proper first name, or enter "None" if this is not a name: ')
+            possibleFirstName = input('>')
+            if possibleFirstName == 'None': #not actually a name
+                return WordClass.addWordOrMarkup(displayName)
+            firstName = possibleFirstName
         else:
             firstName = displayName
 
@@ -778,11 +783,13 @@ lookup - length from first to last is wrong
 
 when giving context, show just the sentence, not the entire paragraph
 
+guessNames has no tests
+
 
 Bugs:
 fix axes on graphing
 firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's the first date in there (but test case works)
-days are off by one
+days are off by one - doesn't pick up the first entry, instead starts with the second
 enter new path doesn't work if initial one isn't valid
 
 

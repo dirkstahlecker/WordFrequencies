@@ -77,12 +77,18 @@ class Helper:
         if re.match('^\s+$', word_in) != None:
             print('WHAT TO RETURN HERE??') #TODO: error handling
             return ('', word_in, '')
-        #clean word before putting it into the WordClass representation
-        firstLetterIndex = re.search('\w|-', word_in).span()[0]
-        beforeStuff = word_in[:firstLetterIndex]
-        lastLetterIndex = re.search('\w(?!.*\w)', word_in).span()[1]
-        afterStuff = word_in[lastLetterIndex:]
-        word_str = word_in[firstLetterIndex:lastLetterIndex]
+        try:
+            #clean word before putting it into the WordClass representation
+            firstLetterIndex = re.search('\w|-', word_in).span()[0]
+            beforeStuff = word_in[:firstLetterIndex]
+            lastLetterIndex = re.search('\w(?!.*\w)', word_in).span()[1]
+            afterStuff = word_in[lastLetterIndex:]
+            word_str = word_in[firstLetterIndex:lastLetterIndex]
+        except:
+            #something went wrong, so just go back to defaults
+            beforeStuff = ''
+            word_str = word_in
+            afterStuff = ''
 
 
 
