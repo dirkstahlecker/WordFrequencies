@@ -96,7 +96,8 @@ class TestUM(unittest.TestCase):
         with Capturing() as output:
             self.wf.lookupWord(['cheryl'])
         expected = str(['cheryl: ', 'First usage: 2017-01-01 00:00:00', 'Last usage: 2017-01-05 00:00:00', 'Total usages: 4', 
-            'Length from first use to last: 0 years, 0 months, 4 days', 'Average usages per day: 1.0', 'Percentage of days with a useage: 57.14%'])
+            'Total days with at least one usage: 4', 'Length from first use to last: 0 years, 0 months, 4 days', 'Average usages per day: 1.0', 
+            'Percentage of days with at least one useage: 57.14%'])
         self.assertEqual(str(output), expected)
 
     def test_relatedNamesDict(self):

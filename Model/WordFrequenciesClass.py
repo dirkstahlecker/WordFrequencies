@@ -328,10 +328,11 @@ class WordFrequencies:
         total_days_used = self.wordsPerDayDict.getCount(word)
         total_number_of_days = len(self.wordCountOfEntriesDict)
         print('Total usages: ' + str(total_uses))
+        print('Total days with at least one usage: ' + str(total_days_used))
         length = (self.wordDict.getLastOccurrence(word) - self.wordDict.getFirstOccurrence(word)).days
         print('Length from first use to last: ' + Helper.daysAsPrettyLength(length))
         print('Average usages per day: ' + str(float(total_uses) / length))
-        print('Percentage of days with a useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%')
+        print('Percentage of days with at least one useage: ' + str(round(float(total_days_used) / total_number_of_days * 100, 2)) + '%')
 
     def overallAnalytics(self):
         print('Total number of entries: ', end=' ')
@@ -802,9 +803,9 @@ noMarkUnder isn't utilized
 
 preserver capitalization and punctuation
 
-lookup - length from first to last is wrong
-
 when giving context, show just the sentence, not the entire paragraph
+
+for lookup, add usages per day (take from wpd dict) and add an average number of days with at least one usage (using that wpd number) (is this "percentage of days"?)
 
 
 Bugs:
@@ -812,7 +813,7 @@ fix axes on graphing
 firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's the first date in there (but test case works)
 days are off by one - doesn't pick up the first entry, instead starts with the second
 enter new path doesn't work if initial one isn't valid
-
+lookup - length from first to last is wrong
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
