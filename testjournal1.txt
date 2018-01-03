@@ -11,6 +11,6 @@ Day four sentence two skipping a day.
 2-05-17: day five sentence one.
 Day five sentence two skipping a month.
 
-12-31-17: testing dates
+12-31-17: testing didn’t
 
-9-8-17: another date
+9-8-17: didn’t date

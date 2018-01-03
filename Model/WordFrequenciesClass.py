@@ -604,8 +604,13 @@ class WordFrequencies:
         return True
 
 
+
+
+
+###############################################################################################
 ###############################################################################################
 # Markup
+###############################################################################################
 ###############################################################################################
 
 #this is used for going through a pre-existing file, checking it for names, and converting them to markup.
@@ -658,9 +663,11 @@ class Markup():
 
         markupFile = open(self.markUpFilePath, 'a')
         markupFile.write('\n\n\n')
+        markupFile.close()
         allWords = []
         line = f.readline()
         while line != '':
+            markupFile = open(self.markUpFilePath, 'a')
             words = line.split(' ')
             for word_str in words:
                 (word_beforeStuff, word_str, word_afterStuff) = Helper.cleanWordForInitialAdd(word_str)
@@ -671,10 +678,11 @@ class Markup():
                 allWords.append(word_class)
                 markupFile.write(word_beforeStuff + word_class.printMarkup() + word_afterStuff + ' ') #need to manually add a space since they're removed in the split
                 #TODO: add spaces back only where they were taken from
+            markupFile.close()
 
             line = f.readline()
 
-        markupFile.close()
+        # markupFile.close()
 
     #TODO: breaks on 'name1/name2' - need to split apart somehow
 
@@ -682,11 +690,12 @@ class Markup():
     #ask which name it is, store it in a markup format, and compute a hash of the day
     #return either the word unchanged, or the markup name if it's a name
     #returns WordClass object
-    def getMarkUnderWord(self, displayName, line):
+    def getMarkUnderWord(self, displayName, paragraph):
         assert type(displayName) is str
 
         print('\n\n\n')
-        print(line) #gives context so you can figure out what's going on #TODO: print the sentence and not the entire paragraph
+        #TODO: how do we get just the sentence and not the entire paragraph?
+        print(paragraph) #gives context so you can figure out what's going on #TODO: print the sentence and not the entire paragraph
         print(displayName + ':')
         numPossibleLastNames = 0
 
@@ -763,8 +772,8 @@ if __name__ == '__main__':
 
 '''
 TODO: 
-something weird going on with apostrophes (specifically "didn't")
 make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
+
 distinguish between different people with the same spelling of names
     possibly by looking at other people that are frequently mentioned with them in the same day to determine
 
@@ -796,16 +805,13 @@ connect this to other things
     texts sent/received
     pictures
 
-
 make a gui navigable interface
 
 noMarkUnder isn't utilized
 
-preserver capitalization and punctuation
-
 when giving context, show just the sentence, not the entire paragraph
 
-for lookup, add usages per day (take from wpd dict) and add an average number of days with at least one usage (using that wpd number) (is this "percentage of days"?)
+*how to deal with generating proper markup for people referred to by their last names ("Hammer")
 
 
 Bugs:
@@ -814,6 +820,8 @@ firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's t
 days are off by one - doesn't pick up the first entry, instead starts with the second
 enter new path doesn't work if initial one isn't valid
 lookup - length from first to last is wrong
+*doesn't catch names with apostrophes (such as "Stephen's")
+*how to deal with adult titles ("Mrs. Margulieux")
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -833,5 +841,9 @@ Consolidated two guessNames methods into one
 Fixed bugs in guessName (couldn't pick up two names next to each other) and added test
 Allow for entering different first name than display name
 displayName in WordClass is only for display, and first and last name are the only things looked at for equality
+
+1-01-18:
+Added days with at least one usage to lookup output and updated test
+Added words with apostrophes to test
 
 '''

@@ -42,7 +42,7 @@ class TestUM(unittest.TestCase):
         self.assertEqual(len(self.wf.namesDict), 3)
 
     def test_wordsDict(self):
-        self.assertEqual(self.wf.wordDict.getNumberOfWords(), 17) #total number of words
+        self.assertEqual(self.wf.wordDict.getNumberOfWords(), 16) #total number of words
         self.assertEqual(self.wf.wordDict.getCount('day'), 9) #word count
         #dates
         self.assertEqual(self.wf.wordDict.getFirstOccurrence('day'), datetime(2017,1,1))
