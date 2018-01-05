@@ -19,11 +19,12 @@ class Capturing(list):
  
 class TestUM(unittest.TestCase):
     wf = None
+    wf2 = None
  
     @classmethod
     def setUpClass(self):
         self.wf = WordFrequencies()
-        self.wf.mainSetup(argparse.Namespace(file='/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/testjournal1.txt', 
+        self.wf.mainSetup(argparse.Namespace(file='/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/test/testjournal1.txt', 
             verbosity=False, combineplurals=False, guessnames=False, markunder=False))
 
     @classmethod
@@ -131,7 +132,7 @@ class TestUM(unittest.TestCase):
 
     def test_guessNames(self):
         output = self.wf.guessNames('Test line Name1 Name2 something else Dirk Cheryl Name3.', True)
-        expected = "['Name1', 'Name2', 'Name3']"
+        expected = "['Name1', 'Name2', 'Name3']" #Dirk and Cheryl are already known to be names
         self.assertEqual(str(sorted(output)), expected)
 
 
@@ -143,6 +144,25 @@ class TestUM(unittest.TestCase):
     def test_firstDateIsCaptured(self):
         self.assertEqual(self.wf.wordCountOfEntriesDict[datetime(2017,1,1)], 6) #make sure first date exists and wasn't skipped over
 
+
+# class TestPlurals(unittest.TestCase):
+#     wf2 = None 
+ 
+#     @classmethod
+#     def setUpClass(self):
+#         self.wf2 = WordFrequencies()
+#         self.wf2.mainSetup(argparse.Namespace(file='/Users/Dirk/Programming/Python/WordFrequencies/WordFrequencies/test/testjournal_plurals.txt', 
+#             verbosity=False, combineplurals=True, guessnames=False, markunder=False)) #TODO: really really weird thing happening here where this is overriding the other class
+
+#     @classmethod
+#     def tearDownClass(self):
+#         pass
+
+#     def test_combinePlurals_apostrophes(self):
+#         self.assertEqual(2, self.wf2.wordDict.internalDict['pluralname2']['count'])
+
+#     def test_combinePlurals_noApostrophe(self):
+#         pass
 
 
 if __name__ == '__main__':

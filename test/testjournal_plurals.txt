@@ -1,0 +1,14 @@
+1-01-17: day one sentence one Cheryl Laura plural1s plural2’s.
+
+1-02-17: day two sentence one Dirk Cheryl plural1s plural2’s.
+Day two sentence two.
+
+1-03-17: day three sentence one Dirk Cheryl plural2’s Pluralname2’s.
+
+1-05-17: day four sentence one Dirk Cheryl Laura plural1s plural2’s.
+Day four sentence two skipping a day Pluralname1s.
+
+2-05-17: day five sentence one Pluralname1s.
+Day five sentence two skipping a month Pluralname2’s.
+
+12-31-17: testing didn’t

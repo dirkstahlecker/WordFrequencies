@@ -104,9 +104,7 @@ class WordFrequencies:
 
             if self.prefs.COMBINE_PLURALS:
                 if word.endswith("'s"):
-                    word = WordClass.addWordOrMarkup(word.toString()[:len(word)-2])
-                #stripping plural s is easy for names, as we assume there isn't another word that is the name plus the trailing s
-                #but for arbitrary words its hard (e.g. "was" or "is")
+                    word = WordClass.addWordOrMarkup(word.toString()[:len(word)-2]) #TODO: this is broken
 
             wasUpper = False;
             if word.toString()[:1].isupper():
@@ -684,6 +682,7 @@ class Markup():
 
         # markupFile.close()
 
+
     #TODO: breaks on 'name1/name2' - need to split apart somehow
 
     #only called for names
@@ -692,9 +691,17 @@ class Markup():
     #returns WordClass object
     def getMarkUnderWord(self, displayName, paragraph):
         assert type(displayName) is str
+        # displayName = Helper.cleanWord(displayName, True) #this loses the 's when printing the markup string
+
+        wasPluralWithApostrophe = False
+        displayName = displayName.translate(str.maketrans({'‘':"'",'’':"'"})) #need to change from smart quotes to regular
+        if displayName.endswith("'s"):
+            displayName = displayName[:-2]
+            wasPluralWithApostrophe = True
 
         print('\n\n\n')
         #TODO: how do we get just the sentence and not the entire paragraph?
+        #Idea: carry a count of the word we're currently on (in the readLine method), and pass in that word plus/minus like 20 words as the sentence.
         print(paragraph) #gives context so you can figure out what's going on #TODO: print the sentence and not the entire paragraph
         print(displayName + ':')
         numPossibleLastNames = 0
@@ -743,7 +750,7 @@ class Markup():
         except:
             self.lastNamesForFirstNameDict[firstName] = [lastName]
 
-        return WordClass.addNameWithMarkupPieces(displayName, firstName, lastName)
+        return WordClass.addNameWithMarkupPieces(displayName, firstName, lastName, wasPluralWithApostrophe)
 
 
 ###############################################################################################
@@ -845,5 +852,8 @@ displayName in WordClass is only for display, and first and last name are the on
 1-01-18:
 Added days with at least one usage to lookup output and updated test
 Added words with apostrophes to test
+
+1-04-17:
+Markup generator now ignores 's endings for names, allowing them to be processed as normal
 
 '''
