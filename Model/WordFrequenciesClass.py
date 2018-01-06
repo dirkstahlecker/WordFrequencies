@@ -675,17 +675,14 @@ class Markup():
                 last20Words.append(word_str)
 
                 (word_beforeStuff, word_str, word_afterStuff) = Helper.cleanWordForInitialAdd(word_str)
-                
-                cleanedWord = Helper.cleanWord(word_str)
-                wasPluralWithApostrophe = False
-                cleanedWord = cleanedWord.translate(str.maketrans({'‘':"'",'’':"'"})) #need to change from smart quotes to regular
-                if cleanedWord.endswith("'s"):
-                    print("ends with apostrophe")
-                    cleanedWord = cleanedWord[:-2]
-                    wasPluralWithApostrophe = True
 
-                if cleanedWord in self.namesSet:
-                    word_class = self.getMarkUnderWord(word_str, last20Words, wasPluralWithApostrophe)
+                if Helper.cleanWord(word_str, stripApostropheS=True) in self.namesSet:
+                    wasPluralWithApostrophe = False
+                    word_str = word_str.translate(str.maketrans({'‘':"'",'’':"'"})) #need to change from smart quotes to regular
+                    if word_str.endswith("'s"):
+                        word_str = word_str[:-2]
+                        wasPluralWithApostrophe = True
+                        word_class = self.getMarkUnderWord(word_str, last20Words, wasPluralWithApostrophe)
                 else:
                     word_class = WordClass.addWordOrMarkup(word_str)
                 allWords.append(word_class)
@@ -703,7 +700,7 @@ class Markup():
     #returns WordClass object
     def getMarkUnderWord(self, displayName, last20Words, wasPluralWithApostrophe):
         assert type(displayName) is str
-        displayName = Helper.cleanWord(displayName, True) #this loses the 's when printing the markup string
+        displayName = Helper.cleanWord(displayName, True)
 
         print('\n\n\n')
         for x in last20Words:
@@ -829,6 +826,8 @@ days are off by one - doesn't pick up the first entry, instead starts with the s
 enter new path doesn't work if initial one isn't valid
 lookup - length from first to last is wrong
 
+* 's lost in normal words
+
 
 -------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -859,5 +858,6 @@ Markup generator now ignores 's endings for names, allowing them to be processed
 Can now auto assign people referred to by their last names
 Use a rolling list of most recent 20 words in the paragraph for context for the markup user
 Fixed bug where 's in markup didn't pick up properly
+Fixed bug where 's in regular words was removed from markup text
 
 '''

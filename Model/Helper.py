@@ -13,7 +13,7 @@ class Helper:
         return str(years) + ' years, ' + str(months) + ' months, ' + str(days) + ' days'
 
     @staticmethod
-    def cleanWord(word, preserveCapitalization = False):
+    def cleanWord(word, preserveCapitalization = False, stripApostropheS = False):
         try:
             word = word.toString()
         except:
@@ -22,6 +22,10 @@ class Helper:
         if not preserveCapitalization:
             word = word.lower()
         regex = re.compile('([\w|-|\']*)')
+        if stripApostropheS:
+            word = word.translate(str.maketrans({'‘':"'",'’':"'"})) #need to change from smart quotes to regular
+            if word.endswith("'s"):
+                word = word[:-2]
         match = regex.match(word)
         word = match.group(0)
         return word
