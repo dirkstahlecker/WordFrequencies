@@ -712,9 +712,9 @@ class Markup():
         else: #proceed normally
             firstName = ''
             print('Is this the proper first name for ' + displayName + '? [enter] for yes, [n] for no')
-            properFirstName = input('>')
-            if properFirstName == 'n':
-                print('Enter proper first name, or enter "None" if this is not a name: ')
+            isProperFirstName = input('>')
+            if isProperFirstName == 'n':
+                print('Enter proper first name (or enter "None" if this is not a name)')
                 possibleFirstName = input('>')
                 if possibleFirstName == 'None' or possibleFirstName == 'none': #not actually a name
                     return WordClass.addWordOrMarkup(displayName)
@@ -855,5 +855,8 @@ Added words with apostrophes to test
 
 1-04-17:
 Markup generator now ignores 's endings for names, allowing them to be processed as normal
+
+1-05-18: 
+Can now auto assign people referred to by their last names
 
 '''
