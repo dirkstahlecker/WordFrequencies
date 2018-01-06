@@ -664,23 +664,26 @@ class Markup():
         markupFile.close()
         allWords = []
         line = f.readline()
+        last20Words = [] #maintains the last 20 words to give the user context for the name, which is a rolling list of 20 words ending in the particular name of note
         while line != '':
             markupFile = open(self.markUpFilePath, 'a')
             words = line.split(' ')
+            last20Words = []
             for word_str in words:
+                if len(last20Words) >= 20:
+                    last20Words.pop(0)
+                last20Words.append(word_str)
+
                 (word_beforeStuff, word_str, word_afterStuff) = Helper.cleanWordForInitialAdd(word_str)
                 if Helper.cleanWord(word_str) in self.namesSet:
-                    word_class = self.getMarkUnderWord(word_str, line)
+                    word_class = self.getMarkUnderWord(word_str, last20Words)
                 else:
                     word_class = WordClass.addWordOrMarkup(word_str)
                 allWords.append(word_class)
                 markupFile.write(word_beforeStuff + word_class.printMarkup() + word_afterStuff + ' ') #need to manually add a space since they're removed in the split
                 #TODO: add spaces back only where they were taken from
             markupFile.close()
-
             line = f.readline()
-
-        # markupFile.close()
 
 
     #TODO: breaks on 'name1/name2' - need to split apart somehow
@@ -689,7 +692,7 @@ class Markup():
     #ask which name it is, store it in a markup format, and compute a hash of the day
     #return either the word unchanged, or the markup name if it's a name
     #returns WordClass object
-    def getMarkUnderWord(self, displayName, paragraph):
+    def getMarkUnderWord(self, displayName, last20Words):
         assert type(displayName) is str
         # displayName = Helper.cleanWord(displayName, True) #this loses the 's when printing the markup string
 
@@ -700,10 +703,11 @@ class Markup():
             wasPluralWithApostrophe = True
 
         print('\n\n\n')
-        #TODO: how do we get just the sentence and not the entire paragraph?
-        #Idea: carry a count of the word we're currently on (in the readLine method), and pass in that word plus/minus like 20 words as the sentence.
-        print(paragraph) #gives context so you can figure out what's going on #TODO: print the sentence and not the entire paragraph
-        print(displayName + ':')
+        for x in last20Words:
+            print(x + ' ', end='')
+
+
+        print('\n' + displayName + ':')
         numPossibleLastNames = 0
 
         if displayName in self.uniqueDisplayNamesToNameDict.keys(): #we've specified to give the same markup to all these display names
@@ -779,11 +783,6 @@ if __name__ == '__main__':
 
 '''
 TODO: 
-make names sensitive to capitals (ex. "will" is very high, because of the everyday word)
-
-distinguish between different people with the same spelling of names
-    possibly by looking at other people that are frequently mentioned with them in the same day to determine
-
 replace data structures with something more readable and maintainable (some sort of named nested tree maybe)
 
 flag to ignore trailing s and then combine both "word" and "words" into same 
@@ -818,8 +817,6 @@ noMarkUnder isn't utilized
 
 when giving context, show just the sentence, not the entire paragraph
 
-*how to deal with generating proper markup for people referred to by their last names ("Hammer")
-
 
 Bugs:
 fix axes on graphing
@@ -827,7 +824,6 @@ firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's t
 days are off by one - doesn't pick up the first entry, instead starts with the second
 enter new path doesn't work if initial one isn't valid
 lookup - length from first to last is wrong
-*doesn't catch names with apostrophes (such as "Stephen's")
 *how to deal with adult titles ("Mrs. Margulieux")
 
 
@@ -858,5 +854,6 @@ Markup generator now ignores 's endings for names, allowing them to be processed
 
 1-05-18: 
 Can now auto assign people referred to by their last names
+Use a rolling list of most recent 20 words in the paragraph for context for the markup user
 
 '''

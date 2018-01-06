@@ -53,7 +53,6 @@ class WordClass:
         return self.firstName == other.firstName and self.lastName == other.lastName
 
     def toString(self):
-        print(self.wasPluralWithApostrophe)
         if self.displayName != None:
             if self.wasPluralWithApostrophe:
                 return self.displayName + "'s"
