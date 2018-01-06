@@ -675,8 +675,17 @@ class Markup():
                 last20Words.append(word_str)
 
                 (word_beforeStuff, word_str, word_afterStuff) = Helper.cleanWordForInitialAdd(word_str)
-                if Helper.cleanWord(word_str) in self.namesSet:
-                    word_class = self.getMarkUnderWord(word_str, last20Words)
+                
+                cleanedWord = Helper.cleanWord(word_str)
+                wasPluralWithApostrophe = False
+                cleanedWord = cleanedWord.translate(str.maketrans({'‘':"'",'’':"'"})) #need to change from smart quotes to regular
+                if cleanedWord.endswith("'s"):
+                    print("ends with apostrophe")
+                    cleanedWord = cleanedWord[:-2]
+                    wasPluralWithApostrophe = True
+
+                if cleanedWord in self.namesSet:
+                    word_class = self.getMarkUnderWord(word_str, last20Words, wasPluralWithApostrophe)
                 else:
                     word_class = WordClass.addWordOrMarkup(word_str)
                 allWords.append(word_class)
@@ -692,15 +701,9 @@ class Markup():
     #ask which name it is, store it in a markup format, and compute a hash of the day
     #return either the word unchanged, or the markup name if it's a name
     #returns WordClass object
-    def getMarkUnderWord(self, displayName, last20Words):
+    def getMarkUnderWord(self, displayName, last20Words, wasPluralWithApostrophe):
         assert type(displayName) is str
-        # displayName = Helper.cleanWord(displayName, True) #this loses the 's when printing the markup string
-
-        wasPluralWithApostrophe = False
-        displayName = displayName.translate(str.maketrans({'‘':"'",'’':"'"})) #need to change from smart quotes to regular
-        if displayName.endswith("'s"):
-            displayName = displayName[:-2]
-            wasPluralWithApostrophe = True
+        displayName = Helper.cleanWord(displayName, True) #this loses the 's when printing the markup string
 
         print('\n\n\n')
         for x in last20Words:
@@ -817,6 +820,7 @@ noMarkUnder isn't utilized
 
 when giving context, show just the sentence, not the entire paragraph
 
+*how to deal with adults with titles ("Mrs. Margulieux")
 
 Bugs:
 fix axes on graphing
@@ -824,7 +828,6 @@ firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's t
 days are off by one - doesn't pick up the first entry, instead starts with the second
 enter new path doesn't work if initial one isn't valid
 lookup - length from first to last is wrong
-*how to deal with adult titles ("Mrs. Margulieux")
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -855,5 +858,6 @@ Markup generator now ignores 's endings for names, allowing them to be processed
 1-05-18: 
 Can now auto assign people referred to by their last names
 Use a rolling list of most recent 20 words in the paragraph for context for the markup user
+Fixed bug where 's in markup didn't pick up properly
 
 '''
