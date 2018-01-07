@@ -682,7 +682,7 @@ class Markup():
                     if word_str.endswith("'s"):
                         word_str = word_str[:-2]
                         wasPluralWithApostrophe = True
-                        word_class = self.getMarkUnderWord(word_str, last20Words, wasPluralWithApostrophe)
+                    word_class = self.getMarkUnderWord(word_str, last20Words, wasPluralWithApostrophe)
                 else:
                     word_class = WordClass.addWordOrMarkup(word_str)
                 allWords.append(word_class)
@@ -700,6 +700,7 @@ class Markup():
     #returns WordClass object
     def getMarkUnderWord(self, displayName, last20Words, wasPluralWithApostrophe):
         assert type(displayName) is str
+        originalWord = displayName #needed when the name isn't actually a name
         displayName = Helper.cleanWord(displayName, True)
 
         print('\n\n\n')
@@ -721,7 +722,7 @@ class Markup():
                 print('Enter proper first name (or enter "None" if this is not a name)')
                 possibleFirstName = input('>')
                 if possibleFirstName == 'None' or possibleFirstName == 'none': #not actually a name
-                    return WordClass.addWordOrMarkup(displayName)
+                    return WordClass.addWordOrMarkup(originalWord)
                 firstName = possibleFirstName
             else:
                 firstName = displayName
@@ -819,14 +820,15 @@ when giving context, show just the sentence, not the entire paragraph
 
 *how to deal with adults with titles ("Mrs. Margulieux")
 
+show at least one word after the current name (for if I specify a last name in the journal itself)
+
 Bugs:
 fix axes on graphing
 firstDate isn't accurate - isn't picking up 8-08-10, possible bug because it's the first date in there (but test case works)
 days are off by one - doesn't pick up the first entry, instead starts with the second
 enter new path doesn't work if initial one isn't valid
 lookup - length from first to last is wrong
-
-* 's lost in normal words
+"Chuck-A-Rama" becamame "Chuck" after I said Chuck wasn't a name in markup
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------
